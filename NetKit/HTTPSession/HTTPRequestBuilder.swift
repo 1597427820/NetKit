@@ -9,7 +9,7 @@
 import Foundation
 
 public protocol RequestBuilder {
-	func buildRequest(request : NSURLRequest, parameters : NSDictionary?, inout error : NSError?) -> NSURLRequest?
+	func buildRequest(request : NSURLRequest, parameters : NSDictionary?, error : NSErrorPointer) -> NSURLRequest?
 }
 
 public class HTTPRequestBuilder : RequestBuilder {
@@ -20,7 +20,7 @@ public class HTTPRequestBuilder : RequestBuilder {
 
 	public init() {}
 
-	public func buildRequest(request: NSURLRequest, parameters: NSDictionary?, inout error : NSError?) -> NSURLRequest? {
+	public func buildRequest(request: NSURLRequest, parameters: NSDictionary?, error : NSErrorPointer) -> NSURLRequest? {
 		var result : NSURLRequest? = request
 		if let _parameters = parameters as? [String:String] {
 			let parameterString = FormURLEncodedParameters(_parameters, false)
@@ -50,12 +50,12 @@ public class HTTPRequestBuilder : RequestBuilder {
 
 public class JSONRequestBuilder : HTTPRequestBuilder {
 
-	public override func buildRequest(request: NSURLRequest, parameters: NSDictionary?, inout error : NSError?) -> NSURLRequest? {
+	public override func buildRequest(request: NSURLRequest, parameters: NSDictionary?, error : NSErrorPointer) -> NSURLRequest? {
 		var result : NSURLRequest? = request
 		if let _parameters = parameters {
 			let method = request.HTTPMethod?.uppercaseString ?? "GET"
 			if !contains(methodsWithParameterizedURL, method) {
-				let data = NSJSONSerialization.dataWithJSONObject(_parameters, options: NSJSONWritingOptions.PrettyPrinted, error: &error)
+				let data = NSJSONSerialization.dataWithJSONObject(_parameters, options: NSJSONWritingOptions.PrettyPrinted, error: error)
 				if let _data = data {
 					var mutableRequest = request.mutableCopy() as NSMutableURLRequest
 					mutableRequest.HTTPBody = data
@@ -67,7 +67,7 @@ public class JSONRequestBuilder : HTTPRequestBuilder {
 					result = nil
 				}
 			} else {
-				result = super.buildRequest(request, parameters: parameters, error: &error)
+				result = super.buildRequest(request, parameters: parameters, error: error)
 			}
 		}
 		return result

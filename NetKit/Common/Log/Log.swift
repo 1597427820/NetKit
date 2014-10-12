@@ -8,37 +8,37 @@
 
 import Foundation
 
-public func Log(message : @autoclosure () -> String, line : Int = __LINE__, function : String = __FUNCTION__, file : String = __FILE__) {
+public func Log(message : @autoclosure () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
-	println("\(file.lastPathComponent) - \(function) [\(line)] \(message())")
+	println("\(file) - \(function) [\(line)] \(message())")
 #endif
 }
 
-public func LogI(message : @autoclosure () -> String, line : Int = __LINE__, function : String = __FUNCTION__, file : String = __FILE__) {
+public func LogI(message : @autoclosure () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	Log("\n\n[INFO]\n\n \(message()) \n\n", line: line, function: function, file: file)
 #endif
 }
 
-public func LogW(message : @autoclosure () -> String, line : Int = __LINE__, function : String = __FUNCTION__, file : String = __FILE__) {
+public func LogW(message : @autoclosure () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	Log("\n\n[WARNING]\n\n \(message())", line: line, function: function, file: file)
 #endif
 }
 
-public func LogE(message : @autoclosure () -> String, line : Int = __LINE__, function : String = __FUNCTION__, file : String = __FILE__) {
+public func LogE(message : @autoclosure () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	Log("\n\n[ERROR]\n\n \(message()) \n\n", line: line, function: function, file: file)
 #endif
 }
 
-public func Log(error : @autoclosure () -> NSError?, line : Int = __LINE__, function : String = __FUNCTION__, file : String = __FILE__) {
+public func Log(error : @autoclosure () -> NSError?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	Log("\n\n[ERROR]\n\n \(error()?.localizedDescription) \n\n", line: line, function: function, file: file)
 #endif
 }
 
-public func Dump(request req : @autoclosure () -> NSURLRequest?, line : Int = __LINE__, function : String = __FUNCTION__, file : String = __FILE__) {
+public func Dump(request req : @autoclosure () -> NSURLRequest?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	var message = ""
 	if let request = req() {
@@ -54,7 +54,7 @@ public func Dump(request req : @autoclosure () -> NSURLRequest?, line : Int = __
 #endif
 }
 
-public func Dump(response res : @autoclosure () -> NSHTTPURLResponse?, line : Int = __LINE__, function : String = __FUNCTION__, file : String = __FILE__) {
+public func Dump(response res : @autoclosure () -> NSHTTPURLResponse?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	var message = ""
 	if let response = res() {
@@ -69,7 +69,7 @@ public func Dump(response res : @autoclosure () -> NSHTTPURLResponse?, line : In
 #endif
 }
 
-public func Dump(data dat : @autoclosure () -> NSData?, line : Int = __LINE__, function : String = __FUNCTION__, file : String = __FILE__) {
+public func Dump(data dat : @autoclosure () -> NSData?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	var message = ""
 	if let data = dat() {

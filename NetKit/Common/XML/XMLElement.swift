@@ -133,8 +133,8 @@ extension XMLElement {
 		return result
 	}
 
-	public final class func XMLElementWithData(data : NSData, inout error : NSError?) -> XMLElement? {
-		return XMLParser.parse(data, error: &error)
+	public final class func XMLElementWithData(data : NSData, error : NSErrorPointer) -> XMLElement? {
+		return XMLParser.parse(data, error: error)
 	}
 }
 
@@ -263,11 +263,11 @@ public final class XMLParser : NSObject {
 		return self.root
 	}
 
-	public class func parse(data : NSData, inout error : NSError?) -> XMLElement? {
+	public class func parse(data : NSData, error : NSErrorPointer) -> XMLElement? {
 		let parser = XMLParser()
 		parser.parse(data)
 		var result = parser.end()
-		error = parser.error
+		error.memory = parser.error
 		return result
 	}
 }

@@ -11,6 +11,14 @@ import UIKit
 
 private var RequestCount : Int = 0
 
+public protocol JSONInitializable {
+	init(JSON : NSDictionary)
+}
+
+public func map<T : JSONInitializable>(JSONs : [NSDictionary]) -> [T] {
+	return JSONs.map {T(JSON: $0)}
+}
+
 public protocol HTTPSessionBackgroundDelegate : class {
 	func HTTPSessionDidFinishEvents(session : NetKit.HTTPSession)
 	func HTTPSession(session : NetKit.HTTPSession, task : NSURLSessionTask, didCompleteWithData data : NSData?, error : NSError?)
@@ -24,6 +32,7 @@ public class HTTPSession : NSObject {
 
 	public typealias ProgressBlock = (bytesWrittenOrRead : Int64, totalBytesWrittenOrRead : Int64, totalBytesExpectedToWriteOrRead : Int64) -> ();
 	public typealias CompletionBlock = (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()
+	public typealias DataCompletionBlock = (data : NSData?, response : NSURLResponse?, error : NSError?) -> ()
 	public typealias DownloadCompletionBlock = (URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ()
 	public typealias AuthenticationChallengeCompletionBlock = (disposition : NSURLSessionAuthChallengeDisposition, credential : NSURLCredential) -> ()
 	public typealias SessionAuthenticationChallengeBlock = (challenge : NSURLAuthenticationChallenge, completion : AuthenticationChallengeCompletionBlock) -> ()
@@ -176,48 +185,84 @@ extension HTTPSession {
 
 extension HTTPSession {
 
-	public func GET(URL : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
-		var URL = NSURL(string: URL)
+	public func GET(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+		var URL = NSURL(string: URLString)
 		if let _URL = URL {
-			var request = NSMutableURLRequest(URL: _URL)
-			request.HTTPMethod = "GET"
-			startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
+			GET(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
+		} else {
+			var error = NSError(domain: "NetKit", code: -7829, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+			completion(data: nil, response: nil, error: error)
 		}
 	}
 
-	public func GETJSON(URL : String, parameters : NSDictionary?, completion : CompletionBlock) {
+	public func GET(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+		var request = NSMutableURLRequest(URL: URL)
+		request.HTTPMethod = "GET"
+		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
+	}
+
+	public func GETJSON(#URLString : String, parameters : NSDictionary?, completion : CompletionBlock) {
+		GET(URLString: URLString, parameters: parameters, builder: JSONRequestBuilder(), parser: JSONResponseParser(), completion: completion)
+	}
+
+	public func GETJSON(URL : NSURL, parameters : NSDictionary?, completion : CompletionBlock) {
 		GET(URL, parameters: parameters, builder: JSONRequestBuilder(), parser: JSONResponseParser(), completion: completion)
 	}
 
-	public func GETXML(URL : String, parameters : NSDictionary?, completion : CompletionBlock) {
+	public func GETXML(#URLString : String, parameters : NSDictionary?, completion : CompletionBlock) {
+		GET(URLString: URLString, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser(), completion: completion)
+	}
+
+	public func GETXML(URL : NSURL, parameters : NSDictionary?, completion : CompletionBlock) {
 		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser(), completion: completion)
 	}
 
-	public func POST(URL : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
-		var URL = NSURL(string: URL)
-		if let _URL = URL {
-			var request = NSMutableURLRequest(URL: _URL)
-			request.HTTPMethod = "POST"
-			startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
+	public func GETDATA(URL : NSURL, parameters : NSDictionary?, completion : DataCompletionBlock) {
+		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: nil) { (data, response, error) -> () in
+			completion(data: data as? NSData, response: response, error: error)
 		}
 	}
 
-	public func DELETE(URL : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
-		var URL = NSURL(string: URL)
+	public func POST(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+		var URL = NSURL(string: URLString)
 		if let _URL = URL {
-			var request = NSMutableURLRequest(URL: _URL)
-			request.HTTPMethod = "DELETE"
-			startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
+			POST(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
+		} else {
+			var error = NSError(domain: "NetKit", code: -7829, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+			completion(data: nil, response: nil, error: error)
 		}
 	}
 
-	public func PATCH(URL : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
-		var URL = NSURL(string: URL)
+	public func POST(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+		var request = NSMutableURLRequest(URL: URL)
+		request.HTTPMethod = "POST"
+		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
+	}
+
+	public func DELETE(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+		var URL = NSURL(string: URLString)
 		if let _URL = URL {
-			var request = NSMutableURLRequest(URL: _URL)
-			request.HTTPMethod = "PATCH"
-			startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
+			DELETE(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
 		}
+	}
+
+	public func DELETE(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+		var request = NSMutableURLRequest(URL: URL)
+		request.HTTPMethod = "DELETE"
+		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
+	}
+
+	public func PATCH(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+		var URL = NSURL(string: URLString)
+		if let _URL = URL {
+			PATCH(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
+		}
+	}
+
+	public func PATCH(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+		var request = NSMutableURLRequest(URL: URL)
+		request.HTTPMethod = "PATCH"
+		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
 	}
 }
 
@@ -256,14 +301,15 @@ extension HTTPSession {
 		}
 	}
 
-	private func validateResponse(response : NSURLResponse, inout error : NSError?) -> Bool {
+	private func validateResponse(response : NSURLResponse, error : NSErrorPointer) -> Bool {
 		var result = false
 		if let HTTPResponse = response as? NSHTTPURLResponse {
 			result = (count(acceptedStatusCodes) > 0 || contains(acceptedStatusCodes, HTTPResponse.statusCode)) &&
 				(acceptedMIMETypes.count == 0 || contains(acceptedMIMETypes, HTTPResponse.MIMEType ?? ""))
 		}
 		if !result && error != nil {
-			error = NSError(domain: "NetKit", code: -21384, userInfo: [NSLocalizedDescriptionKey: "Invalid Response"])
+			error.memory
+				= NSError(domain: "NetKit", code: -21384, userInfo: [NSLocalizedDescriptionKey: "Invalid Response"])
 		}
 		return result
 	}

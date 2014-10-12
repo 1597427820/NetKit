@@ -10,7 +10,7 @@ import Foundation
 
 public protocol ResponseParser {
 	func parseData(data : NSData, response : NSURLResponse, completion : (data : AnyObject?, error : NSError?) -> ())
-	func shouldParseDataForResponse(response : NSURLResponse, inout error : NSError?) -> Bool
+	func shouldParseDataForResponse(response : NSURLResponse, error : NSErrorPointer) -> Bool
 }
 
 public class HTTPResponseParser : ResponseParser {
@@ -19,12 +19,12 @@ public class HTTPResponseParser : ResponseParser {
 		return []
 	}
 
-	public func shouldParseDataForResponse(response: NSURLResponse, inout error: NSError?) -> Bool {
+	public func shouldParseDataForResponse(response: NSURLResponse, error: NSErrorPointer) -> Bool {
 		var MIMEType = response.MIMEType ?? ""
 		var result = contains(acceptedMIMETypes, MIMEType) || response.URL?.pathExtension.lowercaseString == "json"
 		if (!result && error != nil) {
 			var message = "Unexpected Content-Type, received \(MIMEType), expected \(acceptedMIMETypes)"
-			error! = NSError(domain: "NetKit", code: -128942, userInfo: [NSLocalizedDescriptionKey: message])
+			error.memory = NSError(domain: "NetKit", code: -128942, userInfo: [NSLocalizedDescriptionKey: message])
 		}
 		return result
 	}
