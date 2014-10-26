@@ -16,3 +16,5 @@ FOUNDATION_EXPORT const unsigned char NetKitVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <NetKit/PublicHeader.h>
 #import <NetKit/NKXMLParser.h>
+#import <NetKit/Reachability.h>
+#import <netinet/in.h>
