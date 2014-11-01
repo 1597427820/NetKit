@@ -47,7 +47,7 @@ extension XMLElement {
 		let count = components.count
 		var current : Int = 0
 		var first = components[current]
-		if countElements(first) == 0 || first == self.name {
+		if first.isEmpty || first == self.name {
 			current++
 		}
 		if current < count {
@@ -75,7 +75,7 @@ extension XMLElement {
 		let count = components.count
 		var current : Int = 0
 		var first = components[current]
-		if countElements(first) == 0 || first == self.name {
+		if first.isEmpty || first == self.name {
 			current++
 		}
 		if current < count {
@@ -247,11 +247,6 @@ public final class XMLParser : NSObject {
 	public var error : NSError? {
 		var result : NSError? = self.parser.error
 		return result
-	}
-
-	public override init() {
-		super.init()
-		self.parser.delegate = self
 	}
 
 	public func parse(data : NSData) {

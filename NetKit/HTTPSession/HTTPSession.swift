@@ -33,6 +33,7 @@ public class HTTPSession : NSObject {
 	public typealias ProgressBlock = (bytesWrittenOrRead : Int64, totalBytesWrittenOrRead : Int64, totalBytesExpectedToWriteOrRead : Int64) -> ();
 	public typealias CompletionBlock = (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()
 	public typealias DataCompletionBlock = (data : NSData?, response : NSURLResponse?, error : NSError?) -> ()
+	public typealias XMLCompletionBlock = (xml : XMLElement?, response : NSURLResponse?, error : NSError?) -> ()
 	public typealias DownloadCompletionBlock = (URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ()
 	public typealias AuthenticationChallengeCompletionBlock = (disposition : NSURLSessionAuthChallengeDisposition, credential : NSURLCredential) -> ()
 	public typealias SessionAuthenticationChallengeBlock = (challenge : NSURLAuthenticationChallenge, completion : AuthenticationChallengeCompletionBlock) -> ()
@@ -82,6 +83,7 @@ extension HTTPSession {
 
 	public func startRequest(request : NSURLRequest, parser : ResponseParser?, completion : CompletionBlock) {
 		Dump(request: request)
+		Dump(data: request.HTTPBody)
 		showNetworkActivityIndicator()
 		let task = session.dataTaskWithRequest(request) { [unowned self] (data, response, error) -> Void in
 			self.hideNetworkActivityIndicator();
@@ -209,12 +211,28 @@ extension HTTPSession {
 		GET(URL, parameters: parameters, builder: JSONRequestBuilder(), parser: JSONResponseParser(), completion: completion)
 	}
 
-	public func GETXML(#URLString : String, parameters : NSDictionary?, completion : CompletionBlock) {
-		GET(URLString: URLString, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser(), completion: completion)
+	public func GETXML(#URLString : String, parameters : NSDictionary?, completion : XMLCompletionBlock) {
+		GET(URLString: URLString, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser()) { (data, response, error) -> () in
+			let xml = data as? XMLElement
+			completion(xml: xml, response: response, error: error)
+		}
 	}
 
-	public func GETXML(URL : NSURL, parameters : NSDictionary?, completion : CompletionBlock) {
-		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser(), completion: completion)
+	public func GETXML(URL : NSURL, parameters : NSDictionary?, completion : XMLCompletionBlock) {
+		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser()) { (data, response, error) -> () in
+			let xml = data as? XMLElement
+			completion(xml: xml, response: response, error: error)
+		}
+	}
+
+	public func GETRSS<T : RSSItem>(URL : NSURL, parameters : NSDictionary?, completion : (rss : RSSFeed<T>?, response : NSURLResponse?, error : NSError?) -> ()) {
+		GETXML(URL, parameters: parameters) { (xml, response, error) -> () in
+			var rss : RSSFeed<T>?
+			if let _xml = xml {
+				rss = RSSFeed<T>(xml: _xml)
+			}
+			completion(rss: rss, response: response, error: error)
+		}
 	}
 
 	public func GETDATA(URL : NSURL, parameters : NSDictionary?, completion : DataCompletionBlock) {

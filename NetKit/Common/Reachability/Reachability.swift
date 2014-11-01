@@ -16,6 +16,8 @@ private func blankOf<T>(type: T.Type) -> T {
 	return val
 }
 
+public let NetworkReachabilityChangedNotification = "NetworkReachabilityChangedNotification"
+
 public enum ReachabilityType {
 	case Internet, LocalWiFi
 }
