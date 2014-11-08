@@ -11,14 +11,6 @@ import UIKit
 
 private var RequestCount : Int = 0
 
-public protocol JSONInitializable {
-	init(JSON : NSDictionary)
-}
-
-public func map<T : JSONInitializable>(JSONs : [NSDictionary]) -> [T] {
-	return JSONs.map {T(JSON: $0)}
-}
-
 public protocol HTTPSessionBackgroundDelegate : class {
 	func HTTPSessionDidFinishEvents(session : NetKit.HTTPSession)
 	func HTTPSession(session : NetKit.HTTPSession, task : NSURLSessionTask, didCompleteWithData data : NSData?, error : NSError?)
@@ -30,19 +22,12 @@ public protocol HTTPSessionBackgroundDownloadDelegate : class {
 
 public class HTTPSession : NSObject {
 
-	public typealias ProgressBlock = (bytesWrittenOrRead : Int64, totalBytesWrittenOrRead : Int64, totalBytesExpectedToWriteOrRead : Int64) -> ();
-	public typealias CompletionBlock = (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()
-	public typealias DataCompletionBlock = (data : NSData?, response : NSURLResponse?, error : NSError?) -> ()
-	public typealias XMLCompletionBlock = (xml : XMLElement?, response : NSURLResponse?, error : NSError?) -> ()
-	public typealias DownloadCompletionBlock = (URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ()
 	public typealias AuthenticationChallengeCompletionBlock = (disposition : NSURLSessionAuthChallengeDisposition, credential : NSURLCredential) -> ()
-	public typealias SessionAuthenticationChallengeBlock = (challenge : NSURLAuthenticationChallenge, completion : AuthenticationChallengeCompletionBlock) -> ()
-	public typealias TaskAuthenticationChallengeBlock = (task : NSURLSessionTask, challenge : NSURLAuthenticationChallenge, completion : AuthenticationChallengeCompletionBlock) -> ()
 
 	public var acceptedStatusCodes = Range(200..<300)
 	public var acceptedMIMETypes : [String] = []
-	public var onSessionAuthenticationChallenge : SessionAuthenticationChallengeBlock?
-	public var onTaskAuthenticationChallenge : TaskAuthenticationChallengeBlock?
+	public var onSessionAuthenticationChallenge : ((challenge : NSURLAuthenticationChallenge, completion : AuthenticationChallengeCompletionBlock) -> ())?
+	public var onTaskAuthenticationChallenge : ((task : NSURLSessionTask, challenge : NSURLAuthenticationChallenge, completion : AuthenticationChallengeCompletionBlock) -> ())?
 	public weak var backgroundDelegate : HTTPSessionBackgroundDelegate?
 	public weak var backgroundDownloadDelegate : HTTPSessionBackgroundDownloadDelegate?
 
@@ -50,9 +35,9 @@ public class HTTPSession : NSObject {
 
 		var data = NSMutableData()
 		var parser : ResponseParser?
-		var progress : ProgressBlock?
-		var completion : CompletionBlock?
-		var downloadCompletion : DownloadCompletionBlock?
+		var progress : ((bytesWrittenOrRead : Int64, totalBytesWrittenOrRead : Int64, totalBytesExpectedToWriteOrRead : Int64) -> ())?
+		var completion : ((data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ())?
+		var downloadCompletion : ((URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ())?
 
 		init() {}
 
@@ -81,7 +66,7 @@ public class HTTPSession : NSObject {
 
 extension HTTPSession {
 
-	public func startRequest(request : NSURLRequest, parser : ResponseParser?, completion : CompletionBlock) {
+	public func startRequest(request : NSURLRequest, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		Dump(request: request)
 		Dump(data: request.HTTPBody)
 		showNetworkActivityIndicator()
@@ -92,9 +77,9 @@ extension HTTPSession {
 		task.resume()
 	}
 
-	public func startRequest(request : NSURLRequest, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+	public func startRequest(request : NSURLRequest, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var error : NSError?
-		var builtRequest : NSURLRequest? = request;
+		var builtRequest : NSURLRequest? = request
 		if let _builder = builder {
 			builtRequest = _builder.buildRequest(request, parameters: parameters, error: &error)
 		}
@@ -108,12 +93,12 @@ extension HTTPSession {
 		}
 	}
 
-	public func downloadRequest(request : NSURLRequest, parameters : NSDictionary?, builder : RequestBuilder?, progress : ProgressBlock?, completion : DownloadCompletionBlock) {
+	public func downloadRequest(request : NSURLRequest, parameters : NSDictionary?, builder : RequestBuilder?, progress : ((bytesWrittenOrRead : Int64, totalBytesWrittenOrRead : Int64, totalBytesExpectedToWriteOrRead : Int64) -> ())?, completion : (URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var error : NSError?
 		var builtRequest = builder?.buildRequest(request, parameters: parameters, error: &error);
 
 		if let _builtRequest = builtRequest {
-			var completionHanlder : DownloadCompletionBlock? = { [unowned self] (URL, response, error) in
+			var completionHanlder : ((URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ())? = { [unowned self] (URL, response, error) in
 				var location = URL
 				var validationError = error
 				switch (error, response) {
@@ -146,8 +131,8 @@ extension HTTPSession {
 		}
 	}
 
-	public func resumeDownloadWithData(data : NSData, progress : ProgressBlock?, completion : DownloadCompletionBlock) {
-		var completionHanlder : DownloadCompletionBlock? = { [unowned self] (URL, response, error) in
+	public func resumeDownloadWithData(data : NSData, progress : ((bytesWrittenOrRead : Int64, totalBytesWrittenOrRead : Int64, totalBytesExpectedToWriteOrRead : Int64) -> ())?, completion : (URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ()) {
+		var completionHanlder : ((URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ())? = { [unowned self] (URL, response, error) in
 			var location = URL
 			var validationError = error
 			switch (error, response) {
@@ -187,7 +172,7 @@ extension HTTPSession {
 
 extension HTTPSession {
 
-	public func GET(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+	public func GET(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var URL = NSURL(string: URLString)
 		if let _URL = URL {
 			GET(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
@@ -197,28 +182,28 @@ extension HTTPSession {
 		}
 	}
 
-	public func GET(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+	public func GET(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var request = NSMutableURLRequest(URL: URL)
 		request.HTTPMethod = "GET"
 		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
 	}
 
-	public func GETJSON(#URLString : String, parameters : NSDictionary?, completion : CompletionBlock) {
+	public func GETJSON(#URLString : String, parameters : NSDictionary?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		GET(URLString: URLString, parameters: parameters, builder: JSONRequestBuilder(), parser: JSONResponseParser(), completion: completion)
 	}
 
-	public func GETJSON(URL : NSURL, parameters : NSDictionary?, completion : CompletionBlock) {
+	public func GETJSON(URL : NSURL, parameters : NSDictionary?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		GET(URL, parameters: parameters, builder: JSONRequestBuilder(), parser: JSONResponseParser(), completion: completion)
 	}
 
-	public func GETXML(#URLString : String, parameters : NSDictionary?, completion : XMLCompletionBlock) {
+	public func GETXML(#URLString : String, parameters : NSDictionary?, completion : (xml : XMLElement?, response : NSURLResponse?, error : NSError?) -> ()) {
 		GET(URLString: URLString, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser()) { (data, response, error) -> () in
 			let xml = data as? XMLElement
 			completion(xml: xml, response: response, error: error)
 		}
 	}
 
-	public func GETXML(URL : NSURL, parameters : NSDictionary?, completion : XMLCompletionBlock) {
+	public func GETXML(URL : NSURL, parameters : NSDictionary?, completion : (xml : XMLElement?, response : NSURLResponse?, error : NSError?) -> ()) {
 		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser()) { (data, response, error) -> () in
 			let xml = data as? XMLElement
 			completion(xml: xml, response: response, error: error)
@@ -235,13 +220,13 @@ extension HTTPSession {
 		}
 	}
 
-	public func GETDATA(URL : NSURL, parameters : NSDictionary?, completion : DataCompletionBlock) {
+	public func GETDATA(URL : NSURL, parameters : NSDictionary?, completion : (data : NSData?, response : NSURLResponse?, error : NSError?) -> ()) {
 		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: nil) { (data, response, error) -> () in
 			completion(data: data as? NSData, response: response, error: error)
 		}
 	}
 
-	public func POST(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+	public func POST(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var URL = NSURL(string: URLString)
 		if let _URL = URL {
 			POST(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
@@ -251,33 +236,33 @@ extension HTTPSession {
 		}
 	}
 
-	public func POST(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+	public func POST(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var request = NSMutableURLRequest(URL: URL)
 		request.HTTPMethod = "POST"
 		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
 	}
 
-	public func DELETE(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+	public func DELETE(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var URL = NSURL(string: URLString)
 		if let _URL = URL {
 			DELETE(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
 		}
 	}
 
-	public func DELETE(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+	public func DELETE(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var request = NSMutableURLRequest(URL: URL)
 		request.HTTPMethod = "DELETE"
 		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
 	}
 
-	public func PATCH(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+	public func PATCH(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var URL = NSURL(string: URLString)
 		if let _URL = URL {
 			PATCH(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
 		}
 	}
 
-	public func PATCH(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : CompletionBlock) {
+	public func PATCH(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var request = NSMutableURLRequest(URL: URL)
 		request.HTTPMethod = "PATCH"
 		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
@@ -298,7 +283,7 @@ extension HTTPSession {
 		}
 	}
 
-	private func processResponse(response : NSURLResponse?, data : NSData?, error : NSError?, parser : ResponseParser?, completion : CompletionBlock) {
+	private func processResponse(response : NSURLResponse?, data : NSData?, error : NSError?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		Dump(response: response as? NSHTTPURLResponse)
 		Dump(data: data)
 		var result : AnyObject? = data as AnyObject?

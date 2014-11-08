@@ -22,6 +22,7 @@
 		49A98B9519D8C0630082B7F4 /* NKXMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B9319D8C0630082B7F4 /* NKXMLParser.m */; };
 		49A98B9A19DB62C00082B7F4 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B9919DB62C00082B7F4 /* Log.swift */; };
 		49B352DE19FD0BB3001C56C9 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B352DD19FD0BB3001C56C9 /* Reachability.swift */; };
+		49F99E111A098CAF001BB2FE /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F99E101A098CAF001BB2FE /* JSON.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,7 @@
 		49A98B9319D8C0630082B7F4 /* NKXMLParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NKXMLParser.m; sourceTree = "<group>"; };
 		49A98B9919DB62C00082B7F4 /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		49B352DD19FD0BB3001C56C9 /* Reachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
+		49F99E101A098CAF001BB2FE /* JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -152,6 +154,7 @@
 				49622D4619FC2725000527D5 /* Extensions */,
 				49A98B9819DB62B10082B7F4 /* Log */,
 				49A98B8719D8137A0082B7F4 /* XML */,
+				49F99E0F1A098C76001BB2FE /* JSON */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -183,6 +186,14 @@
 				491C49F519FD257200973A56 /* Reachability.m */,
 			);
 			path = Reachability;
+			sourceTree = "<group>";
+		};
+		49F99E0F1A098C76001BB2FE /* JSON */ = {
+			isa = PBXGroup;
+			children = (
+				49F99E101A098CAF001BB2FE /* JSON.swift */,
+			);
+			path = JSON;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -297,6 +308,7 @@
 				49A98B4819D6B0130082B7F4 /* HTTPSession.swift in Sources */,
 				49A98B4A19D6D12A0082B7F4 /* HTTPResponseParser.swift in Sources */,
 				49A98B9A19DB62C00082B7F4 /* Log.swift in Sources */,
+				49F99E111A098CAF001BB2FE /* JSON.swift in Sources */,
 				49A98B8919D8138F0082B7F4 /* XMLElement.swift in Sources */,
 				491C49F619FD257200973A56 /* Reachability.m in Sources */,
 				49622D4519FC0E7B000527D5 /* NetServiceDiscoverer.swift in Sources */,

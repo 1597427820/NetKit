@@ -8,6 +8,11 @@
 
 import Foundation
 
+public protocol XMLInitializable {
+
+	init?(xml : XMLElement);
+}
+
 public class XMLElement {
 
 	public final weak var parent : XMLElement?

@@ -8,7 +8,9 @@
 
 import Foundation
 
-public struct RSSFeed<T : RSSItem> {
+public struct RSSFeed<T : RSSItem> : XMLInitializable {
+
+	typealias Item = T
 
 	public let title : String
 	public let link : String
@@ -20,7 +22,7 @@ public struct RSSFeed<T : RSSItem> {
 	public let copyright : String?
 	public let editor : String?
 	public let webmaster : String?
-	public let items : [T]
+	public let items : [Item]
 
 	public init?(xml : XMLElement) {
 		if let channel = xml.elementAtPath("channel") {
@@ -38,16 +40,16 @@ public struct RSSFeed<T : RSSItem> {
 				webmaster = channel["webmaster"]?.text
 				let xmlItems = channel.elementsAtPath("items");
 				if xmlItems.count > 0 {
-					var items = [T]()
+					var items = [Item]()
 					items.reserveCapacity(xmlItems.count)
 					for xmlItem in xmlItems {
-						if let item = T(xml: xmlItem) {
+						if let item = Item(xml: xmlItem) {
 							items.append(item)
 						}
 					}
 					self.items = items;
 				} else {
-					items = [T]()
+					items = [Item]()
 				}
 			default:
 				return nil

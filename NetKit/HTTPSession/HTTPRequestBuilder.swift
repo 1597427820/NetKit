@@ -10,6 +10,7 @@ import Foundation
 
 public protocol RequestBuilder {
 	func buildRequest(request : NSURLRequest, parameters : NSDictionary?, error : NSErrorPointer) -> NSURLRequest?
+	init()
 }
 
 public class HTTPRequestBuilder : RequestBuilder {
@@ -18,7 +19,7 @@ public class HTTPRequestBuilder : RequestBuilder {
 
 	private let methodsWithParameterizedURL = ["GET", "HEAD", "DELETE"]
 
-	public init() {}
+	public required init() {}
 
 	public func buildRequest(request: NSURLRequest, parameters: NSDictionary?, error : NSErrorPointer) -> NSURLRequest? {
 		var result : NSURLRequest? = request
