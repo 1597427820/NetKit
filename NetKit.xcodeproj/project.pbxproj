@@ -11,7 +11,6 @@
 		491C49F819FD26FC00973A56 /* Reachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 491C49F719FD269400973A56 /* Reachability.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		49622D4519FC0E7B000527D5 /* NetServiceDiscoverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49622D4419FC0E7B000527D5 /* NetServiceDiscoverer.swift */; };
 		49622D4819FC2735000527D5 /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49622D4719FC2735000527D5 /* Array.swift */; };
-		498106B61A0508E700CA291C /* RSS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 498106B51A0508E700CA291C /* RSS.swift */; };
 		49A98B3319D5BCA80082B7F4 /* NetKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 49A98B3219D5BCA80082B7F4 /* NetKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		49A98B3D19D5BCA80082B7F4 /* NetKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B3C19D5BCA80082B7F4 /* NetKitTests.swift */; };
 		49A98B4819D6B0130082B7F4 /* HTTPSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B4719D6B0130082B7F4 /* HTTPSession.swift */; };
@@ -30,7 +29,6 @@
 		491C49F719FD269400973A56 /* Reachability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Reachability.h; sourceTree = "<group>"; };
 		49622D4419FC0E7B000527D5 /* NetServiceDiscoverer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetServiceDiscoverer.swift; sourceTree = "<group>"; };
 		49622D4719FC2735000527D5 /* Array.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Array.swift; sourceTree = "<group>"; };
-		498106B51A0508E700CA291C /* RSS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RSS.swift; sourceTree = "<group>"; };
 		49A98B2D19D5BCA80082B7F4 /* NetKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NetKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A98B3119D5BCA80082B7F4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		49A98B3219D5BCA80082B7F4 /* NetKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NetKit.h; sourceTree = "<group>"; };
@@ -162,7 +160,6 @@
 		49A98B8719D8137A0082B7F4 /* XML */ = {
 			isa = PBXGroup;
 			children = (
-				498106B51A0508E700CA291C /* RSS.swift */,
 				49A98B8819D8138F0082B7F4 /* XMLElement.swift */,
 				49A98B9219D8C0630082B7F4 /* NKXMLParser.h */,
 				49A98B9319D8C0630082B7F4 /* NKXMLParser.m */,
@@ -316,7 +313,6 @@
 				49622D4819FC2735000527D5 /* Array.swift in Sources */,
 				49A98B4C19D6E1530082B7F4 /* HTTPRequestBuilder.swift in Sources */,
 				49A98B9519D8C0630082B7F4 /* NKXMLParser.m in Sources */,
-				498106B61A0508E700CA291C /* RSS.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

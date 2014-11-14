@@ -210,16 +210,6 @@ extension HTTPSession {
 		}
 	}
 
-	public func GETRSS<T : RSSItem>(URL : NSURL, parameters : NSDictionary?, completion : (rss : RSSFeed<T>?, response : NSURLResponse?, error : NSError?) -> ()) {
-		GETXML(URL, parameters: parameters) { (xml, response, error) -> () in
-			var rss : RSSFeed<T>?
-			if let _xml = xml {
-				rss = RSSFeed<T>(xml: _xml)
-			}
-			completion(rss: rss, response: response, error: error)
-		}
-	}
-
 	public func GETDATA(URL : NSURL, parameters : NSDictionary?, completion : (data : NSData?, response : NSURLResponse?, error : NSError?) -> ()) {
 		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: nil) { (data, response, error) -> () in
 			completion(data: data as? NSData, response: response, error: error)
