@@ -275,7 +275,7 @@ extension HTTPSession {
 
 	private func processResponse(response : NSURLResponse?, data : NSData?, error : NSError?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		Dump(response: response as? NSHTTPURLResponse)
-		Dump(data: data)
+//		Dump(data: data)
 		var result : AnyObject? = data as AnyObject?
 		var validationError = error
 		switch (response, data, error, parser) {
@@ -290,7 +290,9 @@ extension HTTPSession {
 				fallthrough
 			}
 		default:
-			completion(data: result, response: response, error: validationError)
+			dispatch_async(dispatch_get_main_queue()) { () -> Void in
+				completion(data: result, response: response, error: validationError)
+			}
 		}
 	}
 

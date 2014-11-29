@@ -21,6 +21,7 @@
 		49A98B9519D8C0630082B7F4 /* NKXMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B9319D8C0630082B7F4 /* NKXMLParser.m */; };
 		49A98B9A19DB62C00082B7F4 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B9919DB62C00082B7F4 /* Log.swift */; };
 		49B352DE19FD0BB3001C56C9 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B352DD19FD0BB3001C56C9 /* Reachability.swift */; };
+		49C371A61A228981008C22E2 /* AsyncOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C371A51A228981008C22E2 /* AsyncOperation.swift */; };
 		49F99E111A098CAF001BB2FE /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F99E101A098CAF001BB2FE /* JSON.swift */; };
 /* End PBXBuildFile section */
 
@@ -43,6 +44,7 @@
 		49A98B9319D8C0630082B7F4 /* NKXMLParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NKXMLParser.m; sourceTree = "<group>"; };
 		49A98B9919DB62C00082B7F4 /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		49B352DD19FD0BB3001C56C9 /* Reachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
+		49C371A51A228981008C22E2 /* AsyncOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsyncOperation.swift; sourceTree = "<group>"; };
 		49F99E101A098CAF001BB2FE /* JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -148,6 +150,7 @@
 		49A98B8619D8134C0082B7F4 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				49C371A41A22896F008C22E2 /* Operation */,
 				49B352D819FD0A02001C56C9 /* Reachability */,
 				49622D4619FC2725000527D5 /* Extensions */,
 				49A98B9819DB62B10082B7F4 /* Log */,
@@ -183,6 +186,14 @@
 				491C49F519FD257200973A56 /* Reachability.m */,
 			);
 			path = Reachability;
+			sourceTree = "<group>";
+		};
+		49C371A41A22896F008C22E2 /* Operation */ = {
+			isa = PBXGroup;
+			children = (
+				49C371A51A228981008C22E2 /* AsyncOperation.swift */,
+			);
+			path = Operation;
 			sourceTree = "<group>";
 		};
 		49F99E0F1A098C76001BB2FE /* JSON */ = {
@@ -312,6 +323,7 @@
 				49B352DE19FD0BB3001C56C9 /* Reachability.swift in Sources */,
 				49622D4819FC2735000527D5 /* Array.swift in Sources */,
 				49A98B4C19D6E1530082B7F4 /* HTTPRequestBuilder.swift in Sources */,
+				49C371A61A228981008C22E2 /* AsyncOperation.swift in Sources */,
 				49A98B9519D8C0630082B7F4 /* NKXMLParser.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
