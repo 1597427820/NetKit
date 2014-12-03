@@ -73,10 +73,14 @@ public func Dump(response res : @autoclosure () -> NSHTTPURLResponse?, line : In
 
 public func Dump(data dat : @autoclosure () -> NSData?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
-	var message = ""
+	var message : String?
 	if let data = dat() {
-		message += NSString(data: data, encoding: NSASCIIStringEncoding)!
+		if data.length > 0 {
+			message = NSString(data: data, encoding: NSASCIIStringEncoding)!
+		}
 	}
-	LogI(message, line: line, function: function, file: file)
+	if let m = message {
+		LogI(m, line: line, function: function, file: file)
+	}
 #endif
 }
