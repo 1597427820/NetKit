@@ -20,7 +20,7 @@ public protocol HTTPSessionBackgroundDownloadDelegate : class {
 	func HTTPSession(session : NetKit.HTTPSession, downloadTask : NSURLSessionDownloadTask, didFinishDownloadingToURL URL: NSURL)
 }
 
-public class HTTPSession : NSObject {
+public class HTTPSession {
 
 	public typealias AuthenticationChallengeCompletionBlock = (disposition : NSURLSessionAuthChallengeDisposition, credential : NSURLCredential) -> ()
 
@@ -45,10 +45,21 @@ public class HTTPSession : NSObject {
 			self.data.appendData(data)
 		}
 	}
+
+	final class SessionDelegate : NSObject {
+
+		weak var httpSession : HTTPSession?
+
+		init(session : HTTPSession) {
+			self.httpSession = session
+			super.init()
+		}
+	}
+
 	private var taskInfoMap = [Int:TaskInfo]()
 
 	private var configuration : NSURLSessionConfiguration
-	private lazy var session : NSURLSession = NSURLSession(configuration: self.configuration, delegate: self, delegateQueue: nil)
+	private lazy var session : NSURLSession = NSURLSession(configuration: self.configuration, delegate: SessionDelegate(session: self), delegateQueue: nil)
 	private var isBackgroundSession : Bool {
 		var identifier : String? = self.configuration.identifier
 		return  identifier != nil
@@ -56,11 +67,14 @@ public class HTTPSession : NSObject {
 
 	required public init(configuration : NSURLSessionConfiguration?) {
 		self.configuration = configuration ?? NSURLSessionConfiguration.defaultSessionConfiguration()
-		super.init()
 	}
 
-	convenience public override init() {
+	convenience public init() {
 		self.init(configuration: nil)
+	}
+
+	deinit {
+		session.invalidateAndCancel()
 	}
 }
 
@@ -163,10 +177,6 @@ extension HTTPSession {
 
 	public func resetWithCompletion(completion : () -> ()) {
 		session.resetWithCompletionHandler(completion)
-	}
-
-	public func invalidateAndCancel() {
-		session.invalidateAndCancel()
 	}
 }
 
@@ -310,37 +320,39 @@ extension HTTPSession {
 	}
 }
 
-extension HTTPSession : NSURLSessionDelegate {
+extension HTTPSession.SessionDelegate : NSURLSessionDelegate {
 
-	public func URLSession(session: NSURLSession, didBecomeInvalidWithError error: NSError?) {
-		onSessionAuthenticationChallenge = nil;
-		onTaskAuthenticationChallenge = nil;
+	func URLSession(session: NSURLSession, didBecomeInvalidWithError error: NSError?) {
+		if let httpSession = self.httpSession {
+			httpSession.onSessionAuthenticationChallenge = nil
+			httpSession.onTaskAuthenticationChallenge = nil;
+		}
 	}
 
-	public func URLSession(session: NSURLSession, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential!) -> Void) {
-		if let _onSessionAuthenticationChallenge = onSessionAuthenticationChallenge {
+	func URLSession(session: NSURLSession, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential!) -> Void) {
+		if let _onSessionAuthenticationChallenge = httpSession?.onSessionAuthenticationChallenge {
 			_onSessionAuthenticationChallenge(challenge: challenge, completion: completionHandler)
 		} else {
 			completionHandler(.PerformDefaultHandling, nil)
 		}
 	}
 
-	public func URLSessionDidFinishEventsForBackgroundURLSession(session: NSURLSession) {
-		backgroundDelegate?.HTTPSessionDidFinishEvents(self)
+	func URLSessionDidFinishEventsForBackgroundURLSession(session: NSURLSession) {
+		httpSession?.backgroundDelegate?.HTTPSessionDidFinishEvents(httpSession!)
 	}
 }
 
-extension HTTPSession : NSURLSessionTaskDelegate {
+extension HTTPSession.SessionDelegate : NSURLSessionTaskDelegate {
 
-	public func URLSession(session: NSURLSession, task: NSURLSessionTask, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential!) -> Void) {
-		if let _onTaskAuthenticationChallenge = onTaskAuthenticationChallenge {
+	func URLSession(session: NSURLSession, task: NSURLSessionTask, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential!) -> Void) {
+		if let _onTaskAuthenticationChallenge = httpSession?.onTaskAuthenticationChallenge {
 			_onTaskAuthenticationChallenge(task: task, challenge: challenge, completion: completionHandler)
 		} else {
 			completionHandler(.PerformDefaultHandling, nil)
 		}
 	}
 
-	public func URLSession(session: NSURLSession, task: NSURLSessionTask, needNewBodyStream completionHandler: (NSInputStream!) -> Void) {
+	func URLSession(session: NSURLSession, task: NSURLSessionTask, needNewBodyStream completionHandler: (NSInputStream!) -> Void) {
 		if let bodyStream = task.originalRequest.HTTPBodyStream {
 			if (bodyStream as? NSCopying != nil) {
 				completionHandler(bodyStream.copy() as NSInputStream)
@@ -352,68 +364,75 @@ extension HTTPSession : NSURLSessionTaskDelegate {
 		}
 	}
 
-	public func URLSession(session: NSURLSession, task: NSURLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
-		let taskInfo = taskInfoMap[task.taskIdentifier]
-		if let _progress = taskInfo?.progress {
+	func URLSession(session: NSURLSession, task: NSURLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+		if let _progress = httpSession?.taskInfoMap[task.taskIdentifier]?.progress {
 			dispatch_async(dispatch_get_main_queue()) {
 				_progress(bytesWrittenOrRead: bytesSent, totalBytesWrittenOrRead: totalBytesSent, totalBytesExpectedToWriteOrRead: totalBytesExpectedToSend)
 			}
 		}
 	}
 
-	public func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
-		let taskInfo = taskInfoMap[task.taskIdentifier]
-		if let _taskInfo = taskInfo {
-			switch (isBackgroundSession, _taskInfo.completion) {
-			case let (false, .Some(_completion)):
-				_completion(data: _taskInfo.data, response: task.response, error: error)
-			case let (true, _):
-				processResponse(task.response, data: _taskInfo.data, error: error, parser: _taskInfo.parser) { [unowned self] (data, response, error) -> Void in
-					if let _backgroundDelegte = self.backgroundDelegate {
-						_backgroundDelegte.HTTPSession(self, task: task, didCompleteWithData: data as? NSData, error: error)
+	func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
+		if let httpSession = self.httpSession {
+			if let _taskInfo = httpSession.taskInfoMap[task.taskIdentifier] {
+				switch (httpSession.isBackgroundSession, _taskInfo.completion) {
+				case let (false, .Some(_completion)):
+					_completion(data: _taskInfo.data, response: task.response, error: error)
+				case let (true, _):
+					httpSession.processResponse(task.response, data: _taskInfo.data, error: error, parser: _taskInfo.parser) { [unowned self] (data, response, error) -> Void in
+						if let _backgroundDelegte = httpSession.backgroundDelegate {
+							_backgroundDelegte.HTTPSession(httpSession, task: task, didCompleteWithData: data as? NSData, error: error)
+						}
 					}
+				default:
+					assert(false, "This should never happen")
 				}
-			default:
-				assert(false, "This should never happen")
+				httpSession.taskInfoMap.removeValueForKey(task.taskIdentifier)
 			}
-			taskInfoMap.removeValueForKey(task.taskIdentifier)
 		}
 	}
 }
 
-extension HTTPSession : NSURLSessionDataDelegate {
+extension HTTPSession.SessionDelegate : NSURLSessionDataDelegate {
 
-	public func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveResponse response: NSURLResponse, completionHandler: (NSURLSessionResponseDisposition) -> Void) {
+	func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveResponse response: NSURLResponse, completionHandler: (NSURLSessionResponseDisposition) -> Void) {
 		var error : NSError?
-		completionHandler(validateResponse(response, error: &error) ? .Allow : .Cancel)
+		if let httpSession = self.httpSession {
+			completionHandler(httpSession.validateResponse(response, error: &error) ? .Allow : .Cancel)
+		} else {
+			completionHandler(.Cancel)
+		}
 	}
 
-	public func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveData data: NSData) {
-		let taskInfo = taskInfoMap[dataTask.taskIdentifier]
-		if let _taskInfo = taskInfo {
-			_taskInfo.data.appendData(data)
-		} else {
-			taskInfoMap[dataTask.taskIdentifier] = TaskInfo(data: data)
+	func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveData data: NSData) {
+		if let httpSession = self.httpSession {
+			if let _taskInfo = httpSession.taskInfoMap[dataTask.taskIdentifier] {
+				_taskInfo.data.appendData(data)
+			} else {
+				httpSession.taskInfoMap[dataTask.taskIdentifier] = HTTPSession.TaskInfo(data: data)
+			}
 		}
 	}
 }
 
-extension HTTPSession : NSURLSessionDownloadDelegate {
+extension HTTPSession.SessionDelegate : NSURLSessionDownloadDelegate {
 
-	public func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didFinishDownloadingToURL location: NSURL) {
-		if isBackgroundSession {
-			backgroundDownloadDelegate?.HTTPSession(self, downloadTask: downloadTask, didFinishDownloadingToURL: location)
-		} else if let completion = taskInfoMap[downloadTask.taskIdentifier]?.downloadCompletion {
-			completion(URL: location, response: downloadTask.response, error: nil)
-			var taskInfo = taskInfoMap[downloadTask.taskIdentifier]!
-			taskInfo.completion = nil
-			taskInfo.downloadCompletion = nil
-			taskInfoMap[downloadTask.taskIdentifier] = taskInfo
+	func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didFinishDownloadingToURL location: NSURL) {
+		if let httpSession = self.httpSession {
+			if httpSession.isBackgroundSession {
+				httpSession.backgroundDownloadDelegate?.HTTPSession(httpSession, downloadTask: downloadTask, didFinishDownloadingToURL: location)
+			} else if let completion = httpSession.taskInfoMap[downloadTask.taskIdentifier]?.downloadCompletion {
+				completion(URL: location, response: downloadTask.response, error: nil)
+				var taskInfo = httpSession.taskInfoMap[downloadTask.taskIdentifier]!
+				taskInfo.completion = nil
+				taskInfo.downloadCompletion = nil
+				httpSession.taskInfoMap[downloadTask.taskIdentifier] = taskInfo
+			}
 		}
 	}
 
-	public func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-		if let progress = taskInfoMap[downloadTask.taskIdentifier]?.progress {
+	func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+		if let progress = httpSession?.taskInfoMap[downloadTask.taskIdentifier]?.progress {
 			dispatch_async(dispatch_get_main_queue()) {
 				progress(bytesWrittenOrRead: bytesWritten, totalBytesWrittenOrRead: totalBytesWritten, totalBytesExpectedToWriteOrRead: totalBytesExpectedToWrite)
 			}
