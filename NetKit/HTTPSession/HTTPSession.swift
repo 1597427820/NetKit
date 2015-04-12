@@ -11,6 +11,18 @@ import UIKit
 
 private var RequestCount : Int = 0
 
+private func showNetworkActivityIndicator() {
+	dispatch_async(dispatch_get_main_queue()) { () -> Void in
+		UIApplication.sharedApplication().networkActivityIndicatorVisible = ++RequestCount > 0
+	}
+}
+
+private func hideNetworkActivityIndicator() {
+	dispatch_async(dispatch_get_main_queue()) { () -> Void in
+		UIApplication.sharedApplication().networkActivityIndicatorVisible = --RequestCount > 0
+	}
+}
+
 public protocol HTTPSessionBackgroundDelegate : class {
 	func HTTPSessionDidFinishEvents(session : NetKit.HTTPSession)
 	func HTTPSession(session : NetKit.HTTPSession, task : NSURLSessionTask, didCompleteWithData data : NSData?, error : NSError?)
@@ -65,12 +77,8 @@ public class HTTPSession {
 		return  identifier != nil
 	}
 
-	required public init(configuration : NSURLSessionConfiguration?) {
-		self.configuration = configuration ?? NSURLSessionConfiguration.defaultSessionConfiguration()
-	}
-
-	convenience public init() {
-		self.init(configuration: nil)
+	required public init(configuration : NSURLSessionConfiguration = NSURLSessionConfiguration.defaultSessionConfiguration()) {
+		self.configuration = configuration
 	}
 
 	deinit {
@@ -84,9 +92,14 @@ extension HTTPSession {
 		Dump(request: request)
 		Dump(data: request.HTTPBody)
 		showNetworkActivityIndicator()
-		let task = session.dataTaskWithRequest(request) { [unowned self] (data, response, error) -> Void in
-			self.hideNetworkActivityIndicator();
-			self.processResponse(response, data: data, error: error, parser: parser, completion: completion)
+		let task = session.dataTaskWithRequest(request) { [weak self] (data, response, error) -> Void in
+			hideNetworkActivityIndicator();
+			if let selfStrong = self {
+				selfStrong.processResponse(response, data: data, error: error, parser: parser, completion: completion)
+			} else {
+				var error = NSError(domain: "NetKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown Error"])
+				completion(data: nil, response: nil, error: error)
+			}
 		}
 		task.resume()
 	}
@@ -270,18 +283,6 @@ extension HTTPSession {
 }
 
 extension HTTPSession {
-	
-	private func showNetworkActivityIndicator() {
-		dispatch_async(dispatch_get_main_queue()) { () -> Void in
-			UIApplication.sharedApplication().networkActivityIndicatorVisible = ++RequestCount > 0
-		}
-	}
-
-	private func hideNetworkActivityIndicator() {
-		dispatch_async(dispatch_get_main_queue()) { () -> Void in
-			UIApplication.sharedApplication().networkActivityIndicatorVisible = --RequestCount > 0
-		}
-	}
 
 	private func processResponse(response : NSURLResponse?, data : NSData?, error : NSError?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
 		Dump(response: response as? NSHTTPURLResponse)
