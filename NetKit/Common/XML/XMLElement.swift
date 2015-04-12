@@ -27,7 +27,7 @@ public class XMLElement {
 
 	private final class func XMLElementWithElement(element : XMLElement) -> XMLElement {
 		var result : XMLElement?
-		var hasText = element.text != nil && countElements(element.text!) > 0
+		var hasText = element.text != nil && count(element.text!) > 0
 		var hasChildren = element.children != nil && element.children!.count > 0
 		var hasAttributes = element.attributes != nil && element.attributes!.count > 0
 		switch (hasText, hasChildren, hasAttributes) {

@@ -25,11 +25,11 @@ public class HTTPRequestBuilder : RequestBuilder {
 		var result : NSURLRequest? = request
 		if let _parameters = parameters as? [String:String] {
 			let parameterString = FormURLEncodedParameters(_parameters, false)
-			let mutableRequest = request.mutableCopy() as NSMutableURLRequest
+			let mutableRequest = request.mutableCopy() as! NSMutableURLRequest
 			let method = request.HTTPMethod?.uppercaseString ?? "GET"
 			if contains(methodsWithParameterizedURL, method) {
 				let URL = request.URL
-				let URLComponents = NSURLComponents(string: URL.absoluteString ?? "")
+				let URLComponents = NSURLComponents(string: URL?.absoluteString ?? "")
 				if percentEncodeParameters {
 					URLComponents?.query = parameterString
 				} else {
@@ -58,7 +58,7 @@ public class JSONRequestBuilder : HTTPRequestBuilder {
 			if !contains(methodsWithParameterizedURL, method) {
 				let data = NSJSONSerialization.dataWithJSONObject(_parameters, options: NSJSONWritingOptions.PrettyPrinted, error: error)
 				if let _data = data {
-					var mutableRequest = request.mutableCopy() as NSMutableURLRequest
+					var mutableRequest = request.mutableCopy() as! NSMutableURLRequest
 					mutableRequest.HTTPBody = data
 					let charset : NSString = CFStringConvertEncodingToIANACharSetName(CFStringBuiltInEncodings.UTF8.rawValue)
 					let contentType = "application/json; charset=\(charset)"
@@ -94,6 +94,6 @@ private func FormURLEncodedParameters(parameters : [String:String], encode : Boo
 
 extension String {
 	func URLEncodedString() -> String {
-		return CFURLCreateStringByAddingPercentEscapes(nil, self as NSString, nil, "!*'();:@&=+$,/?%#[]", CFStringBuiltInEncodings.UTF8.rawValue) as NSString;
+		return CFURLCreateStringByAddingPercentEscapes(nil, self as NSString, nil, "!*'();:@&=+$,/?%#[]", CFStringBuiltInEncodings.UTF8.rawValue) as NSString as! String;
 	}
 }

@@ -61,7 +61,6 @@ public class Reachability {
 
 	public convenience init(type : ReachabilityType) {
 		var address = blankOf(sockaddr_in)
-		bzero(&address, UInt(sizeof(sockaddr_in)))
 		address.sin_len = UInt8(sizeof(sockaddr_in))
 		address.sin_family = sa_family_t(AF_INET)
 		if type == .LocalWiFi {

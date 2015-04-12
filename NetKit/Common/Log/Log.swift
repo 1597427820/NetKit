@@ -8,31 +8,31 @@
 
 import Foundation
 
-public func Log(message : @autoclosure () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
+public func Log(@autoclosure message :  () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	println("\(file) - \(function) [\(line)] \(message())")
 #endif
 }
 
-public func LogI(message : @autoclosure () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
+public func LogI(@autoclosure message :  () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	Log("\n\n[INFO]\n\n \(message()) \n\n", line: line, function: function, file: file)
 #endif
 }
 
-public func LogW(message : @autoclosure () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
+public func LogW(@autoclosure message :  () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	Log("\n\n[WARNING]\n\n \(message())", line: line, function: function, file: file)
 #endif
 }
 
-public func LogE(message : @autoclosure () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
+public func LogE(@autoclosure message :  () -> String, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	Log("\n\n[ERROR]\n\n \(message()) \n\n", line: line, function: function, file: file)
 #endif
 }
 
-public func Log(error : @autoclosure () -> NSError?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
+public func Log(@autoclosure error :  () -> NSError?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	if let _error = error() {
 		LogE(_error.localizedDescription, line: line, function: function, file: file)
@@ -40,12 +40,12 @@ public func Log(error : @autoclosure () -> NSError?, line : Int = __LINE__, func
 #endif
 }
 
-public func Dump(request req : @autoclosure () -> NSURLRequest?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
+public func Dump(@autoclosure request req :  () -> NSURLRequest?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	var message = ""
 	if let request = req() {
 		var method = request.HTTPMethod ?? "GET"
-		var URL = request.URL.absoluteString ?? ""
+		var URL = request.URL?.absoluteString ?? ""
 		var headers = request.allHTTPHeaderFields?.description ?? ""
 		message += "*** REQUEST ***"
 		message += "\nHTTP Method: \(method)"
@@ -56,7 +56,7 @@ public func Dump(request req : @autoclosure () -> NSURLRequest?, line : Int = __
 #endif
 }
 
-public func Dump(response res : @autoclosure () -> NSHTTPURLResponse?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
+public func Dump(@autoclosure response res :  () -> NSHTTPURLResponse?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	var message = ""
 	if let response = res() {
@@ -71,12 +71,12 @@ public func Dump(response res : @autoclosure () -> NSHTTPURLResponse?, line : In
 #endif
 }
 
-public func Dump(data dat : @autoclosure () -> NSData?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
+public func Dump(@autoclosure data dat :  () -> NSData?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
 	var message : String?
 	if let data = dat() {
 		if data.length > 0 {
-			message = NSString(data: data, encoding: NSASCIIStringEncoding)!
+			message = (NSString(data: data, encoding: NSASCIIStringEncoding)! as! String)
 		}
 	}
 	if let m = message {

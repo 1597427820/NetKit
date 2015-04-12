@@ -354,8 +354,8 @@ extension HTTPSession.SessionDelegate : NSURLSessionTaskDelegate {
 
 	func URLSession(session: NSURLSession, task: NSURLSessionTask, needNewBodyStream completionHandler: (NSInputStream!) -> Void) {
 		if let bodyStream = task.originalRequest.HTTPBodyStream {
-			if (bodyStream as? NSCopying != nil) {
-				completionHandler(bodyStream.copy() as NSInputStream)
+			if ((bodyStream as? NSCopying) != nil) {
+				completionHandler(bodyStream.copy() as! NSInputStream)
 			} else {
 				completionHandler(nil)
 			}
