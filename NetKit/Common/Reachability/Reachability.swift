@@ -47,10 +47,10 @@ public class Reachability {
 	}
 
 	private let reachabilityRef: Unmanaged<SCNetworkReachability>
-	public let type : ReachabilityType
+	public let reachabilityType : ReachabilityType
 
 	private init(hostAddress : UnsafePointer<sockaddr_in>, type : ReachabilityType) {
-		self.type = type
+		self.reachabilityType = type
 		reachabilityRef = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, UnsafePointer<sockaddr>(hostAddress))
 	}
 
@@ -70,8 +70,7 @@ public class Reachability {
 	}
 
 	public func start() -> Bool {
-		var info = self
-		var context = SCNetworkReachabilityContext(version: 0, info: &info, retain: nil, release: nil, copyDescription: nil)
+		var context = SCNetworkReachabilityContext(version: 0, info: nil, retain: nil, release: nil, copyDescription: nil)
 		return NKReachabilityStart(reachabilityRef.takeUnretainedValue(), context)
 	}
 
@@ -82,7 +81,7 @@ public class Reachability {
 	private func statusForFlags(flags : SCNetworkReachabilityFlags) -> NetworkStatus {
 		var result = NetworkStatus.NotReachable
 		var options = Int(flags)
-		if type == .Internet {
+		if reachabilityType == .Internet {
 			if (options & kSCNetworkReachabilityFlagsReachable) == 0 {
 				return .NotReachable
 			}

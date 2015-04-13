@@ -47,9 +47,7 @@ public class AsyncOperation : NSOperation {
 	public override func start() {
 		if !self.cancelled {
 			self.executing = true
-			dispatch_async(dispatch_get_main_queue()) { () -> Void in
-				self.block(operation: self)
-			}
+			self.block(operation: self)
 		} else {
 			stop()
 		}
