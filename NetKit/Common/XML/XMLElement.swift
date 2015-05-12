@@ -112,8 +112,10 @@ extension XMLElement {
 	public subscript(index : Int) -> XMLElement? {
 		get {
 			var result : XMLElement? = nil
-			if let _children = self.children {
-				result = _children[index]
+			if let _children = children {
+				if index < _children.count {
+					result = _children[index]
+				}
 			}
 			return result
 		}
@@ -121,7 +123,7 @@ extension XMLElement {
 
 	public subscript(key : String) -> XMLElement? {
 		get {
-			return self.elementAtPath(key)
+			return elementAtPath(key)
 		}
 	}
 }

@@ -10,7 +10,6 @@ import Foundation
 
 public protocol RequestBuilder {
 	func buildRequest(request : NSURLRequest, parameters : NSDictionary?, error : NSErrorPointer) -> NSURLRequest?
-	init()
 }
 
 public class HTTPRequestBuilder : RequestBuilder {
@@ -24,7 +23,7 @@ public class HTTPRequestBuilder : RequestBuilder {
 	public func buildRequest(request: NSURLRequest, parameters: NSDictionary?, error : NSErrorPointer) -> NSURLRequest? {
 		var result : NSURLRequest? = request
 		if let _parameters = parameters as? [String:String] {
-			let parameterString = FormURLEncodedParameters(_parameters, false)
+			let parameterString = formURLEncodedParameters(_parameters, false)
 			let mutableRequest = request.mutableCopy() as! NSMutableURLRequest
 			let method = request.HTTPMethod?.uppercaseString ?? "GET"
 			if contains(methodsWithParameterizedURL, method) {
@@ -75,7 +74,7 @@ public class JSONRequestBuilder : HTTPRequestBuilder {
 	}
 }
 
-private func FormURLEncodedParameters(parameters : [String:String], encode : Bool) -> String {
+private func formURLEncodedParameters(parameters : [String:String], encode : Bool) -> String {
 	var result = ""
 	let keys = sorted(parameters.keys) { $0 < $1 }
 	let count = keys.count
