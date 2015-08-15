@@ -23,7 +23,6 @@ public class NetServiceDiscoverer : NSObject {
 	private let serviceBrowser : NSNetServiceBrowser = NSNetServiceBrowser()
 	private lazy var toResolve = [NSNetService]()
 	private lazy var resolved = [NSNetService]()
-	private var active : NSNetService?
 	private var notifyUpdate = false
 
 	public override init() {

@@ -35,6 +35,11 @@ public protocol ResponseParser {
 	func shouldParseDataForResponse(response : NSURLResponse) throws
 }
 
+public enum HTTPResponseParserError : ErrorType {
+	case Unknown
+	case CannotParse(String)
+}
+
 public class HTTPResponseParser<P : DataParser> : ResponseParser {
 
 	public typealias Parser = P
@@ -59,17 +64,12 @@ public class HTTPResponseParser<P : DataParser> : ResponseParser {
 	}
 
 	public func shouldParseDataForResponse(response : NSURLResponse) throws {
-		var error: NSError! = NSError(domain: "Migrator", code: 0, userInfo: nil)
 		let MIMEType = response.MIMEType ?? ""
 		let result = acceptedMIMETypes.contains(MIMEType) || response.URL?.pathExtension?.lowercaseString == "json"
-		if (!result && true) {
+		if (!result) {
 			let message = "Unexpected Content-Type, received \(MIMEType), expected \(acceptedMIMETypes)"
-			error = NSError(domain: "NetKit", code: -128942, userInfo: [NSLocalizedDescriptionKey: message])
+			throw HTTPResponseParserError.CannotParse(message)
 		}
-		if result {
-			return
-		}
-		throw error
 	}
 }
 

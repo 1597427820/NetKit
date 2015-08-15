@@ -248,6 +248,10 @@ private final class XMLList : XMLElement {
 	}
 }
 
+public enum XMLParserError : ErrorType {
+	case Unknown
+}
+
 public final class XMLParser : NSObject {
 
 	private var root : XMLElement?
@@ -270,15 +274,16 @@ public final class XMLParser : NSObject {
 	}
 
 	public class func parse(data : NSData) throws -> XMLElement {
-		var error: NSError! = NSError(domain: "Migrator", code: 0, userInfo: nil)
 		let parser = XMLParser()
 		parser.parse(data)
 		let result = parser.end()
-		error = parser.error
-		if let value = result {
-			return value
+		if let error = parser.error {
+			throw error
 		}
-		throw error
+		guard let value = result else {
+			throw XMLParserError.Unknown
+		}
+		return value
 	}
 }
 

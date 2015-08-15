@@ -22,7 +22,9 @@ public class HTTPRequestBuilder : RequestBuilder {
 
 	public func buildRequest(request: NSURLRequest, parameters: NSDictionary?) throws -> NSURLRequest {
 
-		guard let parameters = parameters as? [String:String] else { return request }
+		guard let parameters = parameters as? [String:String] else {
+			return request
+		}
 
 		let parameterString = formURLEncodedParameters(parameters, encode: false)
 		let mutableRequest = request.mutableCopy() as! NSMutableURLRequest
@@ -51,8 +53,10 @@ public class HTTPRequestBuilder : RequestBuilder {
 public class JSONRequestBuilder : HTTPRequestBuilder {
 
 	public override func buildRequest(request: NSURLRequest, parameters: NSDictionary?) throws -> NSURLRequest {
-		let error: NSError! = NSError(domain: "Migrator", code: 0, userInfo: nil)
-		guard let parameters = parameters else { throw error }
+
+		guard let parameters = parameters else {
+			return request
+		}
 
 		let method = request.HTTPMethod?.uppercaseString ?? "GET"
 		var result : NSURLRequest
