@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "18DD23A6C12C3BD136A4D80BCE9037F4ABDA4DDD",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "18DD23A6C12C3BD136A4D80BCE9037F4ABDA4DDD" : 0,
+    "9717357081D0AB73B24EBD6790065EF790755105" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "B15D6A7E-725C-4DC5-BA91-94B6801BDF2F",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "18DD23A6C12C3BD136A4D80BCE9037F4ABDA4DDD" : "NetKit",
+    "9717357081D0AB73B24EBD6790065EF790755105" : ""
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "NetKit",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "NetKit.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:godenzim\/NetKit.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "18DD23A6C12C3BD136A4D80BCE9037F4ABDA4DDD"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/godenzim\/turbo.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "9717357081D0AB73B24EBD6790065EF790755105"
+    }
+  ]
+}

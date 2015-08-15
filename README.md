@@ -1,4 +1,4 @@
 NetKit
 ======
 
-iOS 8 Networking framework written in Swift on top of NSURLSession
+iOS 9 Networking framework written in Swift 2.0 on top of NSURLSession
