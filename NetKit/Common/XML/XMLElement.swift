@@ -27,9 +27,9 @@ public class XMLElement {
 
 	private final class func XMLElementWithElement(element : XMLElement) -> XMLElement {
 		var result : XMLElement?
-		var hasText = element.text != nil && count(element.text!) > 0
-		var hasChildren = element.children != nil && element.children!.count > 0
-		var hasAttributes = element.attributes != nil && element.attributes!.count > 0
+		let hasText = element.text != nil && (element.text!).characters.count > 0
+		let hasChildren = element.children != nil && element.children!.count > 0
+		let hasAttributes = element.attributes != nil && element.attributes!.count > 0
 		switch (hasText, hasChildren, hasAttributes) {
 		case (true, false, false):
 			result = XMLLeaf(name: element.name, text: element.text!)
@@ -51,13 +51,13 @@ extension XMLElement {
 		let components = path.componentsSeparatedByString(".")
 		let count = components.count
 		var current : Int = 0
-		var first = components[current]
+		let first = components[current]
 		if first.isEmpty || first == self.name {
 			current++
 		}
 		if current < count {
 			var match : XMLElement? = self
-			do {
+			repeat {
 				if let _children = match?.children {
 					match = nil
 					for element in _children {
@@ -79,13 +79,13 @@ extension XMLElement {
 		let components = path.componentsSeparatedByString(".")
 		let count = components.count
 		var current : Int = 0
-		var first = components[current]
+		let first = components[current]
 		if first.isEmpty || first == self.name {
 			current++
 		}
 		if current < count {
 			var matches = [self]
-			do {
+			repeat {
 				var tmp = [XMLElement]()
 				for element in matches {
 					if let children = element.children {
@@ -101,10 +101,12 @@ extension XMLElement {
 
 	public final func XMLElementWithContentsOfFile(file : String) -> XMLElement? {
 		var result : XMLElement?
-		var error : NSError?
-		var data = NSData(contentsOfFile: file)
-		if let _data = data {
-			XMLParser.parse(_data, error: &error)
+		if let data = NSData(contentsOfFile: file) {
+			do {
+				result = try XMLParser.parse(data)
+			} catch {
+				result = nil
+			}
 		}
 		return result
 	}
@@ -132,26 +134,28 @@ extension XMLElement {
 
 	public final class func XMLElementWithContentsOfFile(path : String) -> XMLElement? {
 		var result : XMLElement?
-		let data = NSData(contentsOfFile: path)
-		var error : NSError?
-		if let _data = data {
-			result = XMLParser.parse(_data, error: &error)
+		if let data = NSData(contentsOfFile: path) {
+			do {
+				result = try XMLParser.parse(data)
+			} catch {
+				result = nil
+			}
 		}
 		return result
 	}
 
-	public final class func XMLElementWithData(data : NSData, error : NSErrorPointer) -> XMLElement? {
-		return XMLParser.parse(data, error: error)
+	public final class func XMLElementWithData(data : NSData) throws -> XMLElement {
+		return try XMLParser.parse(data)
 	}
 }
 
-extension XMLElement : Printable {
+extension XMLElement : CustomStringConvertible {
 
 	public var description : String {
 		get {
-			var attributes = self.attributes?.description ?? ""
-			var text = self.text ?? ""
-			var children = self.children?.description ?? ""
+			let attributes = self.attributes?.description ?? ""
+			let text = self.text ?? ""
+			let children = self.children?.description ?? ""
 			return "<\(name) \(attributes)>\(text)</\(name)>\n\(children)"
 		}
 	}
@@ -252,7 +256,7 @@ public final class XMLParser : NSObject {
 	private lazy var parser : NKXMLParser = NKXMLParser(delegate: self)!
 
 	public var error : NSError? {
-		var result : NSError? = self.parser.error
+		let result : NSError? = self.parser.error
 		return result
 	}
 
@@ -265,12 +269,16 @@ public final class XMLParser : NSObject {
 		return self.root
 	}
 
-	public class func parse(data : NSData, error : NSErrorPointer) -> XMLElement? {
+	public class func parse(data : NSData) throws -> XMLElement {
+		var error: NSError! = NSError(domain: "Migrator", code: 0, userInfo: nil)
 		let parser = XMLParser()
 		parser.parse(data)
-		var result = parser.end()
-		error.memory = parser.error
-		return result
+		let result = parser.end()
+		error = parser.error
+		if let value = result {
+			return value
+		}
+		throw error
 	}
 }
 
@@ -279,14 +287,14 @@ extension XMLParser : NKXMLParserDelegate {
 	public func parser(parser: NKXMLParser!, didStartElement name: String!, withAttributes attributes: [NSObject : AnyObject]!) {
 		let current = XMLFull(name: name)
 		current.attributes = attributes as? [String:String]
-		if let _root = self.root {
-			if let _current = self.current {
-				self.parents.append(_current)
+		if root != nil {
+			if let current = self.current {
+				parents.append(current)
 			}
 			current.parent = self.current
 			self.current = current
 		} else {
-			self.root = current
+			root = current
 			self.current = current
 		}
 	}

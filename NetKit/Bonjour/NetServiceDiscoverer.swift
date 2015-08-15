@@ -72,9 +72,9 @@ extension NetServiceDiscoverer : NSNetServiceBrowserDelegate {
 
 	public func netServiceBrowser(aNetServiceBrowser: NSNetServiceBrowser, didRemoveService aNetService: NSNetService, moreComing: Bool) {
 		aNetService.delegate = nil
-		if let index = find(toResolve, aNetService) {
+		if let index = toResolve.indexOf(aNetService) {
 			toResolve.removeAtIndex(index)
-		} else if let index = find(resolved, aNetService) {
+		} else if let index = resolved.indexOf(aNetService) {
 			notifyUpdate = true
 			resolved.removeAtIndex(index)
 		}
@@ -104,7 +104,7 @@ extension NetServiceDiscoverer : NSNetServiceDelegate {
 		}
 	}
 
-	public func netService(sender: NSNetService, didNotResolve errorDict: [NSObject : AnyObject]) {
+	public func netService(sender: NSNetService, didNotResolve errorDict: [String: NSNumber]) {
 		sender.delegate = nil
 		toResolve.removeElement { $0 === sender }
 	}

@@ -11,8 +11,8 @@
 		491C49F819FD26FC00973A56 /* Reachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 491C49F719FD269400973A56 /* Reachability.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		49622D4519FC0E7B000527D5 /* NetServiceDiscoverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49622D4419FC0E7B000527D5 /* NetServiceDiscoverer.swift */; };
 		49622D4819FC2735000527D5 /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49622D4719FC2735000527D5 /* Array.swift */; };
+		499173F41B2B0FCA000C4233 /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499173F31B2B0FCA000C4233 /* JSON.swift */; };
 		49A98B3319D5BCA80082B7F4 /* NetKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 49A98B3219D5BCA80082B7F4 /* NetKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		49A98B3D19D5BCA80082B7F4 /* NetKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B3C19D5BCA80082B7F4 /* NetKitTests.swift */; };
 		49A98B4819D6B0130082B7F4 /* HTTPSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B4719D6B0130082B7F4 /* HTTPSession.swift */; };
 		49A98B4A19D6D12A0082B7F4 /* HTTPResponseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B4919D6D12A0082B7F4 /* HTTPResponseParser.swift */; };
 		49A98B4C19D6E1530082B7F4 /* HTTPRequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B4B19D6E1530082B7F4 /* HTTPRequestBuilder.swift */; };
@@ -22,7 +22,6 @@
 		49A98B9A19DB62C00082B7F4 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A98B9919DB62C00082B7F4 /* Log.swift */; };
 		49B352DE19FD0BB3001C56C9 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B352DD19FD0BB3001C56C9 /* Reachability.swift */; };
 		49C371A61A228981008C22E2 /* AsyncOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C371A51A228981008C22E2 /* AsyncOperation.swift */; };
-		49F99E111A098CAF001BB2FE /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F99E101A098CAF001BB2FE /* JSON.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,12 +29,10 @@
 		491C49F719FD269400973A56 /* Reachability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Reachability.h; sourceTree = "<group>"; };
 		49622D4419FC0E7B000527D5 /* NetServiceDiscoverer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetServiceDiscoverer.swift; sourceTree = "<group>"; };
 		49622D4719FC2735000527D5 /* Array.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Array.swift; sourceTree = "<group>"; };
+		499173F31B2B0FCA000C4233 /* JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
 		49A98B2D19D5BCA80082B7F4 /* NetKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NetKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A98B3119D5BCA80082B7F4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		49A98B3219D5BCA80082B7F4 /* NetKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NetKit.h; sourceTree = "<group>"; };
-		49A98B3819D5BCA80082B7F4 /* NetKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NetKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		49A98B3B19D5BCA80082B7F4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		49A98B3C19D5BCA80082B7F4 /* NetKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetKitTests.swift; sourceTree = "<group>"; };
 		49A98B4719D6B0130082B7F4 /* HTTPSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPSession.swift; sourceTree = "<group>"; };
 		49A98B4919D6D12A0082B7F4 /* HTTPResponseParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPResponseParser.swift; sourceTree = "<group>"; };
 		49A98B4B19D6E1530082B7F4 /* HTTPRequestBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPRequestBuilder.swift; sourceTree = "<group>"; };
@@ -45,18 +42,10 @@
 		49A98B9919DB62C00082B7F4 /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		49B352DD19FD0BB3001C56C9 /* Reachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		49C371A51A228981008C22E2 /* AsyncOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsyncOperation.swift; sourceTree = "<group>"; };
-		49F99E101A098CAF001BB2FE /* JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		49A98B2919D5BCA80082B7F4 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		49A98B3519D5BCA80082B7F4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -82,11 +71,18 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		499173F21B2B0FCA000C4233 /* JSON */ = {
+			isa = PBXGroup;
+			children = (
+				499173F31B2B0FCA000C4233 /* JSON.swift */,
+			);
+			path = JSON;
+			sourceTree = "<group>";
+		};
 		49A98B2319D5BCA80082B7F4 = {
 			isa = PBXGroup;
 			children = (
 				49A98B2F19D5BCA80082B7F4 /* NetKit */,
-				49A98B3919D5BCA80082B7F4 /* NetKitTests */,
 				49A98B2E19D5BCA80082B7F4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -95,7 +91,6 @@
 			isa = PBXGroup;
 			children = (
 				49A98B2D19D5BCA80082B7F4 /* NetKit.framework */,
-				49A98B3819D5BCA80082B7F4 /* NetKitTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -120,23 +115,6 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		49A98B3919D5BCA80082B7F4 /* NetKitTests */ = {
-			isa = PBXGroup;
-			children = (
-				49A98B3C19D5BCA80082B7F4 /* NetKitTests.swift */,
-				49A98B3A19D5BCA80082B7F4 /* Supporting Files */,
-			);
-			path = NetKitTests;
-			sourceTree = "<group>";
-		};
-		49A98B3A19D5BCA80082B7F4 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				49A98B3B19D5BCA80082B7F4 /* Info.plist */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
 		49A98B4619D6AFFC0082B7F4 /* HTTPSession */ = {
 			isa = PBXGroup;
 			children = (
@@ -154,8 +132,8 @@
 				49B352D819FD0A02001C56C9 /* Reachability */,
 				49622D4619FC2725000527D5 /* Extensions */,
 				49A98B9819DB62B10082B7F4 /* Log */,
+				499173F21B2B0FCA000C4233 /* JSON */,
 				49A98B8719D8137A0082B7F4 /* XML */,
-				49F99E0F1A098C76001BB2FE /* JSON */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -196,14 +174,6 @@
 			path = Operation;
 			sourceTree = "<group>";
 		};
-		49F99E0F1A098C76001BB2FE /* JSON */ = {
-			isa = PBXGroup;
-			children = (
-				49F99E101A098CAF001BB2FE /* JSON.swift */,
-			);
-			path = JSON;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -238,38 +208,19 @@
 			productReference = 49A98B2D19D5BCA80082B7F4 /* NetKit.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		49A98B3719D5BCA80082B7F4 /* NetKitTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 49A98B4319D5BCA80082B7F4 /* Build configuration list for PBXNativeTarget "NetKitTests" */;
-			buildPhases = (
-				49A98B3419D5BCA80082B7F4 /* Sources */,
-				49A98B3519D5BCA80082B7F4 /* Frameworks */,
-				49A98B3619D5BCA80082B7F4 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = NetKitTests;
-			productName = NetKitTests;
-			productReference = 49A98B3819D5BCA80082B7F4 /* NetKitTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		49A98B2419D5BCA80082B7F4 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0610;
+				LastSwiftUpdateCheck = 0700;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = "Mike Godenzi";
 				TargetAttributes = {
 					49A98B2C19D5BCA80082B7F4 = {
 						CreatedOnToolsVersion = 6.0.1;
 						DevelopmentTeam = XVS9ZJXC8D;
-					};
-					49A98B3719D5BCA80082B7F4 = {
-						CreatedOnToolsVersion = 6.0.1;
 					};
 				};
 			};
@@ -286,20 +237,12 @@
 			projectRoot = "";
 			targets = (
 				49A98B2C19D5BCA80082B7F4 /* NetKit */,
-				49A98B3719D5BCA80082B7F4 /* NetKitTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		49A98B2B19D5BCA80082B7F4 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		49A98B3619D5BCA80082B7F4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -316,7 +259,7 @@
 				49A98B4819D6B0130082B7F4 /* HTTPSession.swift in Sources */,
 				49A98B4A19D6D12A0082B7F4 /* HTTPResponseParser.swift in Sources */,
 				49A98B9A19DB62C00082B7F4 /* Log.swift in Sources */,
-				49F99E111A098CAF001BB2FE /* JSON.swift in Sources */,
+				499173F41B2B0FCA000C4233 /* JSON.swift in Sources */,
 				49A98B8919D8138F0082B7F4 /* XMLElement.swift in Sources */,
 				491C49F619FD257200973A56 /* Reachability.m in Sources */,
 				49622D4519FC0E7B000527D5 /* NetServiceDiscoverer.swift in Sources */,
@@ -325,14 +268,6 @@
 				49A98B4C19D6E1530082B7F4 /* HTTPRequestBuilder.swift in Sources */,
 				49C371A61A228981008C22E2 /* AsyncOperation.swift in Sources */,
 				49A98B9519D8C0630082B7F4 /* NKXMLParser.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		49A98B3419D5BCA80082B7F4 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				49A98B3D19D5BCA80082B7F4 /* NetKitTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -360,6 +295,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -440,11 +376,12 @@
 				);
 				INFOPLIST_FILE = NetKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-lxml2";
 				OTHER_SWIFT_FLAGS = "-DDEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.godenzi.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -468,43 +405,14 @@
 				);
 				INFOPLIST_FILE = NetKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = "-lxml2";
 				OTHER_SWIFT_FLAGS = "-DDEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.godenzi.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				VALID_ARCHS = "arm64 armv7 armv7s";
-			};
-			name = Release;
-		};
-		49A98B4419D5BCA80082B7F4 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = NetKitTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		49A98B4519D5BCA80082B7F4 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = NetKitTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -525,15 +433,6 @@
 			buildConfigurations = (
 				49A98B4119D5BCA80082B7F4 /* Debug */,
 				49A98B4219D5BCA80082B7F4 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		49A98B4319D5BCA80082B7F4 /* Build configuration list for PBXNativeTarget "NetKitTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				49A98B4419D5BCA80082B7F4 /* Debug */,
-				49A98B4519D5BCA80082B7F4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

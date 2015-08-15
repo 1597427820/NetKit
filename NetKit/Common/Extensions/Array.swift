@@ -11,7 +11,7 @@ import Foundation
 public func remove<C : RangeReplaceableCollectionType>(inout c : C, shouldRemove : (C.Generator.Element) -> Bool) {
 	var toRemove : C.Index?
 
-	for (index, candidate) in enumerate(c) {
+	for (index, candidate) in c.enumerate() {
 		if shouldRemove(candidate) {
 			toRemove = index as? C.Index
 			break
@@ -19,13 +19,13 @@ public func remove<C : RangeReplaceableCollectionType>(inout c : C, shouldRemove
 	}
 
 	if let index = toRemove {
-		removeAtIndex(&c, index)
+		c.removeAtIndex(index)
 	}
 }
 
 extension Array {
 
 	mutating func removeElement(condition : (Element) -> Bool) {
-		remove(&self, condition)
+		remove(&self, shouldRemove: condition)
 	}
 }

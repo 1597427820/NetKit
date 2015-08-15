@@ -10,8 +10,8 @@ import Foundation
 import SystemConfiguration
 
 private func blankOf<T>(type: T.Type) -> T {
-	var ptr = UnsafeMutablePointer<T>.alloc(sizeof(T))
-	var val = ptr.memory
+	let ptr = UnsafeMutablePointer<T>.alloc(sizeof(T))
+	let val = ptr.memory
 	ptr.destroy()
 	return val
 }
@@ -30,8 +30,8 @@ public class Reachability {
 
 	public var currentStatus : NetworkStatus {
 		var result = NetworkStatus.NotReachable
-		var flags : SCNetworkReachabilityFlags = 0
-		if SCNetworkReachabilityGetFlags(reachabilityRef.takeUnretainedValue(), &flags) == 1 {
+		var flags : SCNetworkReachabilityFlags = SCNetworkReachabilityFlags(rawValue: 0)
+		if SCNetworkReachabilityGetFlags(reachability, &flags) == true {
 			result = statusForFlags(flags)
 		}
 		return result
@@ -39,24 +39,23 @@ public class Reachability {
 
 	public var connectionRequires : Bool {
 		var result = false
-		var flags : SCNetworkReachabilityFlags = 0
-		if SCNetworkReachabilityGetFlags(reachabilityRef.takeUnretainedValue(), &flags) == 1 {
-			result = Bool(Int(flags) & kSCNetworkReachabilityFlagsConnectionRequired)
+		var flags : SCNetworkReachabilityFlags = SCNetworkReachabilityFlags(rawValue: 0)
+		if SCNetworkReachabilityGetFlags(reachability, &flags) == true {
+			result = flags.contains(SCNetworkReachabilityFlags.ConnectionRequired)
 		}
 		return result
 	}
 
-	private let reachabilityRef: Unmanaged<SCNetworkReachability>
+	private let reachability: SCNetworkReachability
 	public let reachabilityType : ReachabilityType
 
 	private init(hostAddress : UnsafePointer<sockaddr_in>, type : ReachabilityType) {
-		self.reachabilityType = type
-		reachabilityRef = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, UnsafePointer<sockaddr>(hostAddress))
+		reachabilityType = type
+		reachability = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, UnsafePointer<sockaddr>(hostAddress))!
 	}
 
 	deinit {
 		stop()
-		reachabilityRef.release()
 	}
 
 	public convenience init(type : ReachabilityType) {
@@ -70,37 +69,36 @@ public class Reachability {
 	}
 
 	public func start() -> Bool {
-		var context = SCNetworkReachabilityContext(version: 0, info: nil, retain: nil, release: nil, copyDescription: nil)
-		return NKReachabilityStart(reachabilityRef.takeUnretainedValue(), context)
+		let context = SCNetworkReachabilityContext(version: 0, info: nil, retain: nil, release: nil, copyDescription: nil)
+		return NKReachabilityStart(reachability, context)
 	}
 
 	public func stop() {
-		NKReachabilityStop(reachabilityRef.takeUnretainedValue())
+		NKReachabilityStop(reachability)
 	}
 
 	private func statusForFlags(flags : SCNetworkReachabilityFlags) -> NetworkStatus {
 		var result = NetworkStatus.NotReachable
-		var options = Int(flags)
 		if reachabilityType == .Internet {
-			if (options & kSCNetworkReachabilityFlagsReachable) == 0 {
+			if !flags.contains(SCNetworkReachabilityFlags.Reachable) {
 				return .NotReachable
 			}
 
-			if (options & kSCNetworkReachabilityFlagsConnectionRequired) == 0 {
+			if !flags.contains(SCNetworkReachabilityFlags.ConnectionRequired) {
 				result = .ReachableViaWiFi
 			}
 
-			if (options & kSCNetworkReachabilityFlagsInterventionRequired) == 0 || (options & kSCNetworkReachabilityFlagsConnectionOnTraffic) != 0 {
-				if (options & kSCNetworkReachabilityFlagsInterventionRequired) == 0 {
+			if !flags.contains(SCNetworkReachabilityFlags.InterventionRequired) || flags.contains(SCNetworkReachabilityFlags.ConnectionOnTraffic) {
+				if !flags.contains(SCNetworkReachabilityFlags.InterventionRequired) {
 					result = .ReachableViaWiFi
 				}
 			}
 
-			if (options & kSCNetworkReachabilityFlagsIsWWAN) == kSCNetworkReachabilityFlagsIsWWAN {
+			if flags == SCNetworkReachabilityFlags.IsWWAN {
 				result = .ReachableViaWWAN
 			}
 		} else {
-			if (options & kSCNetworkReachabilityFlagsReachable) != 0 && (options & kSCNetworkReachabilityFlagsIsDirect) != 0 {
+			if flags.contains(SCNetworkReachabilityFlags.Reachable) && flags.contains(SCNetworkReachabilityFlags.IsDirect) {
 				result = .ReachableViaWiFi;
 			}
 		}

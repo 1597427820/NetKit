@@ -46,7 +46,6 @@ public class HTTPSession {
 	private struct TaskInfo {
 
 		var data = NSMutableData()
-		var parser : ResponseParser?
 		var progress : ((bytesWrittenOrRead : Int64, totalBytesWrittenOrRead : Int64, totalBytesExpectedToWriteOrRead : Int64) -> ())?
 		var completion : ((data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ())?
 		var downloadCompletion : ((URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ())?
@@ -73,7 +72,7 @@ public class HTTPSession {
 	private var configuration : NSURLSessionConfiguration
 	private lazy var session : NSURLSession = NSURLSession(configuration: self.configuration, delegate: SessionDelegate(session: self), delegateQueue: nil)
 	private var isBackgroundSession : Bool {
-		var identifier : String? = self.configuration.identifier
+		let identifier : String? = self.configuration.identifier
 		return  identifier != nil
 	}
 
@@ -88,7 +87,7 @@ public class HTTPSession {
 
 extension HTTPSession {
 
-	public func startRequest(request : NSURLRequest, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
+	public func startRequest<P : ResponseParser>(request : NSURLRequest, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
 		Dump(request: request)
 		Dump(data: request.HTTPBody)
 		showNetworkActivityIndicator()
@@ -97,22 +96,28 @@ extension HTTPSession {
 			if let selfStrong = self {
 				selfStrong.processResponse(response, data: data, error: error, parser: parser, completion: completion)
 			} else {
-				var error = NSError(domain: "NetKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown Error"])
+				let error = NSError(domain: "NetKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown Error"])
 				completion(data: nil, response: nil, error: error)
 			}
 		}
 		task.resume()
 	}
 
-	public func startRequest(request : NSURLRequest, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
+	public func startRequest<P : ResponseParser>(request : NSURLRequest, parameters : NSDictionary?, builder : RequestBuilder?, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var error : NSError?
 		var builtRequest : NSURLRequest? = request
-		if let _builder = builder {
-			builtRequest = _builder.buildRequest(request, parameters: parameters, error: &error)
+
+		if let builder = builder {
+			do {
+				builtRequest = try builder.buildRequest(request, parameters: parameters)
+			} catch let buildError {
+				builtRequest = nil
+				error = buildError as NSError
+			}
 		}
 
-		if let _builtRequest = builtRequest {
-			startRequest(_builtRequest, parser: parser, completion: completion)
+		if let builtRequest = builtRequest {
+			startRequest(builtRequest, parser: parser, completion: completion)
 		} else {
 			dispatch_async(dispatch_get_main_queue()) {
 				completion(data: nil, response: nil, error: error)
@@ -122,21 +127,31 @@ extension HTTPSession {
 
 	public func downloadRequest(request : NSURLRequest, parameters : NSDictionary?, builder : RequestBuilder?, progress : ((bytesWrittenOrRead : Int64, totalBytesWrittenOrRead : Int64, totalBytesExpectedToWriteOrRead : Int64) -> ())?, completion : (URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ()) {
 		var error : NSError?
-		var builtRequest = builder?.buildRequest(request, parameters: parameters, error: &error);
+		var builtRequest : NSURLRequest? = request
 
-		if let _builtRequest = builtRequest {
-			var completionHanlder : ((URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ())? = { [unowned self] (URL, response, error) in
-				var location = URL
-				var validationError = error
-				switch (error, response) {
-				case let (.None, .Some(_response)):
-					if !self.validateResponse(_response, error: &validationError) {
-						location = nil;
-					}
-					fallthrough
-				default:
-					completion(URL: location, response: response, error: error)
+		if let builder = builder {
+			do {
+				builtRequest = try builder.buildRequest(request, parameters: parameters);
+			} catch let builtError {
+				builtRequest = nil
+				error = builtError as NSError
+			}
+		}
+
+		if let builtRequest = builtRequest {
+			var completionHanlder : ((URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ())? = { [weak self] (URL, response, var error) in
+				guard let selfStrong = self else {
+					completion(URL: nil, response: nil, error: error)
+					return
 				}
+				if let response = response where error == nil {
+					do {
+						try selfStrong.validateResponse(response)
+					} catch let validationError {
+						error = validationError as NSError
+					}
+				}
+				completion(URL: URL, response: response, error: error)
 			}
 			var taskInfo : TaskInfo? = nil
 			if isBackgroundSession || progress != nil {
@@ -146,10 +161,11 @@ extension HTTPSession {
 				completionHanlder = nil
 			}
 			Dump(request: builtRequest)
-			let task = session.downloadTaskWithRequest(_builtRequest, completionHandler: completionHanlder)
-			if let _taskInfo = taskInfo {
+			// FIXME: completionHandler is force unwrapped because for some reason it cannot be nil anymore, probably an error in the Apple header
+			let task = session.downloadTaskWithRequest(builtRequest, completionHandler: completionHanlder!)
+			if let taskInfo = taskInfo {
 				session.delegateQueue.addOperationWithBlock { [unowned self] in
-					self.taskInfoMap[task.taskIdentifier] = _taskInfo
+					self.taskInfoMap[task.taskIdentifier] = taskInfo
 				}
 			}
 			task.resume()
@@ -159,18 +175,19 @@ extension HTTPSession {
 	}
 
 	public func resumeDownloadWithData(data : NSData, progress : ((bytesWrittenOrRead : Int64, totalBytesWrittenOrRead : Int64, totalBytesExpectedToWriteOrRead : Int64) -> ())?, completion : (URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ()) {
-		var completionHanlder : ((URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ())? = { [unowned self] (URL, response, error) in
-			var location = URL
-			var validationError = error
-			switch (error, response) {
-			case let (.None, .Some(_response)):
-				if !self.validateResponse(_response, error: &validationError) {
-					location = nil;
-				}
-				fallthrough
-			default:
-				completion(URL: location, response: response, error: error)
+		var completionHanlder : ((URL : NSURL?, response : NSURLResponse?, error : NSError?) -> ())? = { [weak self] (URL, response, var error) in
+			guard let selfStrong = self else {
+				completion(URL: nil, response: nil, error: error)
+				return
 			}
+			if let response = response where error == nil {
+				do {
+					try selfStrong.validateResponse(response)
+				} catch let validationError {
+					error = validationError as NSError
+				}
+			}
+			completion(URL: URL, response: response, error: error)
 		}
 		var taskInfo : TaskInfo? = nil
 		if isBackgroundSession || progress != nil {
@@ -179,10 +196,10 @@ extension HTTPSession {
 			taskInfo!.downloadCompletion = completionHanlder
 			completionHanlder = nil
 		}
-		let task = session.downloadTaskWithResumeData(data, completionHandler: completionHanlder)
-		if let _taskInfo = taskInfo {
+		let task = session.downloadTaskWithResumeData(data, completionHandler: completionHanlder!)
+		if let taskInfo = taskInfo {
 			session.delegateQueue.addOperationWithBlock { [unowned self] in
-				self.taskInfoMap[task.taskIdentifier] = _taskInfo
+				self.taskInfoMap[task.taskIdentifier] = taskInfo
 			}
 		}
 		task.resume()
@@ -195,88 +212,77 @@ extension HTTPSession {
 
 extension HTTPSession {
 
-	public func GET(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		var URL = NSURL(string: URLString)
+	public func startRequest(request : NSURLRequest, completion : (data : NSData?, response : NSURLResponse?, error : NSError?) -> ()) {
+		startRequest(request, parser: DataResponseParser(), completion: completion)
+	}
+
+	public func startRequest(request : NSURLRequest, parameters : NSDictionary?, builder : RequestBuilder?, completion : (data : NSData?, response : NSURLResponse?, error : NSError?) -> ()) {
+		startRequest(request, parameters: parameters, builder: builder, parser: DataResponseParser(), completion: completion)
+	}
+}
+
+extension HTTPSession {
+
+	public func GET<P : ResponseParser>(URLString URLString : String, parameters : NSDictionary? = nil, builder : RequestBuilder? = nil, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
+		let URL = NSURL(string: URLString)
 		if let _URL = URL {
 			GET(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
 		} else {
-			var error = NSError(domain: "NetKit", code: -7829, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+			let error = NSError(domain: "NetKit", code: -7829, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
 			completion(data: nil, response: nil, error: error)
 		}
 	}
 
-	public func GET(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		var request = NSMutableURLRequest(URL: URL)
+	public func GET<P : ResponseParser>(URL : NSURL, parameters : NSDictionary? = nil, builder : RequestBuilder? = nil, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
+		let request = NSMutableURLRequest(URL: URL)
 		request.HTTPMethod = "GET"
 		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
 	}
 
-	public func GETJSON(#URLString : String, parameters : NSDictionary?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		GET(URLString: URLString, parameters: parameters, builder: JSONRequestBuilder(), parser: JSONResponseParser(), completion: completion)
-	}
-
-	public func GETJSON(URL : NSURL, parameters : NSDictionary?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		GET(URL, parameters: parameters, builder: JSONRequestBuilder(), parser: JSONResponseParser(), completion: completion)
-	}
-
-	public func GETXML(#URLString : String, parameters : NSDictionary?, completion : (xml : XMLElement?, response : NSURLResponse?, error : NSError?) -> ()) {
-		GET(URLString: URLString, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser()) { (data, response, error) -> () in
-			let xml = data as? XMLElement
-			completion(xml: xml, response: response, error: error)
+	public func GETDATA(URL : NSURL, parameters : NSDictionary? = nil, completion : (data : NSData?, response : NSURLResponse?, error : NSError?) -> ()) {
+		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: DataResponseParser()) { (data, response, error) -> () in
+			completion(data: data, response: response, error: error)
 		}
 	}
 
-	public func GETXML(URL : NSURL, parameters : NSDictionary?, completion : (xml : XMLElement?, response : NSURLResponse?, error : NSError?) -> ()) {
-		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: XMLResponseParser()) { (data, response, error) -> () in
-			let xml = data as? XMLElement
-			completion(xml: xml, response: response, error: error)
-		}
-	}
-
-	public func GETDATA(URL : NSURL, parameters : NSDictionary?, completion : (data : NSData?, response : NSURLResponse?, error : NSError?) -> ()) {
-		GET(URL, parameters: parameters, builder: HTTPRequestBuilder(), parser: nil) { (data, response, error) -> () in
-			completion(data: data as? NSData, response: response, error: error)
-		}
-	}
-
-	public func POST(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		var URL = NSURL(string: URLString)
+	public func POST<P : ResponseParser>(URLString URLString : String, parameters : NSDictionary? = nil, builder : RequestBuilder? = nil, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
+		let URL = NSURL(string: URLString)
 		if let _URL = URL {
 			POST(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
 		} else {
-			var error = NSError(domain: "NetKit", code: -7829, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+			let error = NSError(domain: "NetKit", code: -7829, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
 			completion(data: nil, response: nil, error: error)
 		}
 	}
 
-	public func POST(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		var request = NSMutableURLRequest(URL: URL)
+	public func POST<P : ResponseParser>(URL : NSURL, parameters : NSDictionary? = nil, builder : RequestBuilder? = nil, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
+		let request = NSMutableURLRequest(URL: URL)
 		request.HTTPMethod = "POST"
 		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
 	}
 
-	public func DELETE(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		var URL = NSURL(string: URLString)
+	public func DELETE<P : ResponseParser>(URLString URLString : String, parameters : NSDictionary? = nil, builder : RequestBuilder? = nil, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
+		let URL = NSURL(string: URLString)
 		if let _URL = URL {
 			DELETE(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
 		}
 	}
 
-	public func DELETE(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		var request = NSMutableURLRequest(URL: URL)
+	public func DELETE<P : ResponseParser>(URL : NSURL, parameters : NSDictionary? = nil, builder : RequestBuilder? = nil, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
+		let request = NSMutableURLRequest(URL: URL)
 		request.HTTPMethod = "DELETE"
 		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
 	}
 
-	public func PATCH(#URLString : String, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		var URL = NSURL(string: URLString)
+	public func PATCH<P : ResponseParser>(URLString URLString : String, parameters : NSDictionary? = nil, builder : RequestBuilder? = nil, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
+		let URL = NSURL(string: URLString)
 		if let _URL = URL {
 			PATCH(_URL, parameters: parameters, builder: builder, parser: parser, completion: completion)
 		}
 	}
 
-	public func PATCH(URL : NSURL, parameters : NSDictionary?, builder : RequestBuilder?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
-		var request = NSMutableURLRequest(URL: URL)
+	public func PATCH<P : ResponseParser>(URL : NSURL, parameters : NSDictionary? = nil, builder : RequestBuilder? = nil, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
+		let request = NSMutableURLRequest(URL: URL)
 		request.HTTPMethod = "PATCH"
 		startRequest(request, parameters: parameters, builder: builder, parser: parser, completion: completion)
 	}
@@ -284,40 +290,39 @@ extension HTTPSession {
 
 extension HTTPSession {
 
-	private func processResponse(response : NSURLResponse?, data : NSData?, error : NSError?, parser : ResponseParser?, completion : (data : AnyObject?, response : NSURLResponse?, error : NSError?) -> ()) {
+	private func processResponse<P : ResponseParser>(response : NSURLResponse?, data : NSData?, var error : NSError?, parser : P, completion : (data : P.Parser.ResultType?, response : NSURLResponse?, error : NSError?) -> ()) {
 		Dump(response: response as? NSHTTPURLResponse)
 //		Dump(data: data)
-		var result : AnyObject? = data as AnyObject?
-		var validationError = error
-		switch (response, data, error, parser) {
-		case let (.Some(_response), .Some(_data), .None, .Some(_parser)):
-			if validateResponse(_response, error: &validationError) && _data.length > 0 && _parser.shouldParseDataForResponse(_response, error: &validationError) {
-				_parser.parseData(_data, response: _response) { (parsedData, parserError) -> () in
-					dispatch_async(dispatch_get_main_queue()) {
-						completion(data: parsedData, response: response, error: parserError)
+		if let response = response, let data = data where error == nil {
+			do {
+				try validateResponse(response)
+				if data.length > 0 {
+					try parser.shouldParseDataForResponse(response)
+					parser.parseData(data, response: response) { (result, error) -> () in
+						dispatch_async(dispatch_get_main_queue()) {
+							completion(data: result, response: response, error: error)
+						}
 					}
+					return
 				}
-			} else {
-				fallthrough
+			} catch let validationError {
+				error = validationError as NSError
 			}
-		default:
-			dispatch_async(dispatch_get_main_queue()) { () -> Void in
-				completion(data: result, response: response, error: validationError)
-			}
+		}
+		dispatch_async(dispatch_get_main_queue()) { () -> Void in
+			completion(data: nil, response: response, error: error)
 		}
 	}
 
-	private func validateResponse(response : NSURLResponse, error : NSErrorPointer) -> Bool {
-		var result = false
+	private func validateResponse(response : NSURLResponse) throws {
+		var valid = false
 		if let HTTPResponse = response as? NSHTTPURLResponse {
-			result = (count(acceptedStatusCodes) > 0 || contains(acceptedStatusCodes, HTTPResponse.statusCode)) &&
-				(acceptedMIMETypes.count == 0 || contains(acceptedMIMETypes, HTTPResponse.MIMEType ?? ""))
+			valid = (acceptedStatusCodes.count > 0 || acceptedStatusCodes.contains(HTTPResponse.statusCode)) &&
+				(acceptedMIMETypes.count == 0 || acceptedMIMETypes.contains(HTTPResponse.MIMEType ?? ""))
 		}
-		if !result && error != nil {
-			error.memory
-				= NSError(domain: "NetKit", code: -21384, userInfo: [NSLocalizedDescriptionKey: "Invalid Response"])
+		if !valid {
+			throw NSError(domain: "NetKit", code: -21384, userInfo: [NSLocalizedDescriptionKey: "Invalid Response"])
 		}
-		return result
 	}
 }
 
@@ -330,7 +335,7 @@ extension HTTPSession.SessionDelegate : NSURLSessionDelegate {
 		}
 	}
 
-	func URLSession(session: NSURLSession, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential!) -> Void) {
+	func URLSession(session: NSURLSession, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Void) {
 		if let _onSessionAuthenticationChallenge = httpSession?.onSessionAuthenticationChallenge {
 			_onSessionAuthenticationChallenge(challenge: challenge, completion: completionHandler)
 		} else {
@@ -345,7 +350,7 @@ extension HTTPSession.SessionDelegate : NSURLSessionDelegate {
 
 extension HTTPSession.SessionDelegate : NSURLSessionTaskDelegate {
 
-	func URLSession(session: NSURLSession, task: NSURLSessionTask, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential!) -> Void) {
+	func URLSession(session: NSURLSession, task: NSURLSessionTask, didReceiveChallenge challenge: NSURLAuthenticationChallenge, completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Void) {
 		if let _onTaskAuthenticationChallenge = httpSession?.onTaskAuthenticationChallenge {
 			_onTaskAuthenticationChallenge(task: task, challenge: challenge, completion: completionHandler)
 		} else {
@@ -353,10 +358,10 @@ extension HTTPSession.SessionDelegate : NSURLSessionTaskDelegate {
 		}
 	}
 
-	func URLSession(session: NSURLSession, task: NSURLSessionTask, needNewBodyStream completionHandler: (NSInputStream!) -> Void) {
-		if let bodyStream = task.originalRequest.HTTPBodyStream {
+	func URLSession(session: NSURLSession, task: NSURLSessionTask, needNewBodyStream completionHandler: (NSInputStream?) -> Void) {
+		if let bodyStream = task.originalRequest?.HTTPBodyStream {
 			if ((bodyStream as? NSCopying) != nil) {
-				completionHandler(bodyStream.copy() as! NSInputStream)
+				completionHandler((bodyStream.copy() as! NSInputStream))
 			} else {
 				completionHandler(nil)
 			}
@@ -374,35 +379,31 @@ extension HTTPSession.SessionDelegate : NSURLSessionTaskDelegate {
 	}
 
 	func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
-		if let httpSession = self.httpSession {
-			if let _taskInfo = httpSession.taskInfoMap[task.taskIdentifier] {
-				switch (httpSession.isBackgroundSession, _taskInfo.completion) {
-				case let (false, .Some(_completion)):
-					_completion(data: _taskInfo.data, response: task.response, error: error)
-				case let (true, _):
-					httpSession.processResponse(task.response, data: _taskInfo.data, error: error, parser: _taskInfo.parser) { [unowned self] (data, response, error) -> Void in
-						if let _backgroundDelegte = httpSession.backgroundDelegate {
-							_backgroundDelegte.HTTPSession(httpSession, task: task, didCompleteWithData: data as? NSData, error: error)
-						}
-					}
-				default:
-					assert(false, "This should never happen")
+		guard let httpSession = self.httpSession, let taskInfo = httpSession.taskInfoMap[task.taskIdentifier] else { return }
+		if httpSession.isBackgroundSession {
+			httpSession.processResponse(task.response, data: taskInfo.data, error: error, parser: DataResponseParser()) { (data, response, error) -> Void in
+				if let backgroundDelegte = httpSession.backgroundDelegate {
+					backgroundDelegte.HTTPSession(httpSession, task: task, didCompleteWithData: data, error: error)
 				}
-				httpSession.taskInfoMap.removeValueForKey(task.taskIdentifier)
 			}
+		} else if let completion = taskInfo.completion {
+			completion(data: taskInfo.data, response: task.response, error: error)
 		}
+		httpSession.taskInfoMap.removeValueForKey(task.taskIdentifier)
 	}
 }
 
 extension HTTPSession.SessionDelegate : NSURLSessionDataDelegate {
 
 	func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveResponse response: NSURLResponse, completionHandler: (NSURLSessionResponseDisposition) -> Void) {
-		var error : NSError?
-		if let httpSession = self.httpSession {
-			completionHandler(httpSession.validateResponse(response, error: &error) ? .Allow : .Cancel)
-		} else {
-			completionHandler(.Cancel)
+		var disposition = NSURLSessionResponseDisposition.Cancel
+		if let httpSession = httpSession {
+			do {
+				try httpSession.validateResponse(response)
+				disposition = .Allow
+			} catch {}
 		}
+		completionHandler(disposition)
 	}
 
 	func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveData data: NSData) {
