@@ -34,8 +34,8 @@ public func LogE(@autoclosure message :  () -> String, line : Int = __LINE__, fu
 
 public func Log(@autoclosure error :  () -> NSError?, line : Int = __LINE__, function : StaticString = __FUNCTION__, file : StaticString = __FILE__) {
 #if DEBUG
-	if let _error = error() {
-		LogE(_error.localizedDescription, line: line, function: function, file: file)
+	if let error = error() {
+		LogE(error.localizedDescription, line: line, function: function, file: file)
 	}
 #endif
 }
